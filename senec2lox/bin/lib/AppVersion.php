@@ -5,5 +5,5 @@
  */
 final class AppVersion
 {
-    public const string CURRENT = '1.0.3';
+    public const string CURRENT = '1.0.4';
 }

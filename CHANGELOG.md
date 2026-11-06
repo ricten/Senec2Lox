@@ -8,6 +8,14 @@ Release-Ablauf: Version in `senec2lox/plugin.cfg` und `senec2lox/bin/lib/AppVers
 
 ## [Unveröffentlicht]
 
+## [1.0.4] – 2026-11-06
+
+### Geändert
+- **Mindestversion LoxBerry 4.0** (`LB_MINIMUM=4.0.0`): Das Plugin benötigt PHP 8.4 (CLI und Web). Die bisherige Angabe 3.0.0 passte dazu nicht; der Installer lehnt LoxBerry 3.x jetzt ab, statt das Plugin zu installieren und mit einem PHP-Fehler scheitern zu lassen.
+- **Weniger Rechenzeit der Weboberfläche:** Die zyklischen Abfragen `status` und `log` laufen über einen Schnellpfad, der nur Dateien liest (ohne LoxBerry-Bibliothek, ohne Klassen, ohne PHP-Session). Das spart auf kleinen LoxBerrys (Pi) viel Rechenzeit; die Session-Sperre stellte parallele Aufrufe mehrerer Browser-Tabs bisher hintereinander. Die Oberfläche aktualisiert sich nur noch, solange der Browser-Tab sichtbar ist.
+- Der Dienst schreibt das Vorhandensein des OpenAPI-Tokens und den lala-Fingerprint in `status.json` (Datenbasis des Schnellpfads).
+- Neues Mess-Werkzeug `tests/bench_tick.php` (Rechenzeit einer Dienstrunde: ca. 0,3 ms bei 400 Topics).
+
 ## [1.0.3] – 2026-11-06
 
 ### Behoben

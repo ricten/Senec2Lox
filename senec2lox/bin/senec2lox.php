@@ -268,6 +268,7 @@ while ($running) {
         'mqtt' => ($mqtt && $mqtt->connected()), 'mqtt_target' => "$h:$p", 'mqtt_error' => ($mqtt && $mqtt->connected()) ? null : $mqtt_err, 'mqtt_source' => $brokerSource, 'duplicates' => $duplicates, 'mqtt_losses' => $mqttLosses, 'mqtt_last_loss' => $mqttLastLoss,
         'mqtt_uptime' => ($mqtt && $mqtt->connected()) ? $mqtt->uptime() : 0, 'sent' => $sentCount,
         'live_source' => $built['live_source'], 'sources' => $status, 'live' => $live, 'error' => $lastError,
+        'openapi_token' => (bool)$state->get('openapi_token'), 'fingerprint_lala' => $state->get('lala_fp'),
     ];
     @file_put_contents($paths->statusFile(), json_encode($st));
     $log->rotateCheck();

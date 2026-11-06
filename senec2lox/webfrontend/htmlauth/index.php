@@ -369,7 +369,7 @@ function loadLog(){
     if (atEnd) { pre.scrollTop = pre.scrollHeight; }
   }).catch(function(e){ document.getElementById('log').textContent = 'Log konnte nicht geladen werden: ' + e; });
 }
-setInterval(function(){ var d = document.getElementById('sec-log'); if (d && d.open) { loadLog(); } }, 5000);
+setInterval(function(){ var d = document.getElementById('sec-log'); if (!document.hidden && d && d.open) { loadLog(); } }, 5000);
 document.getElementById('sec-log').addEventListener('toggle', function(){ if (this.open) { loadLog(); } });
 // Zustand der Hauptbereiche merken (nur Browser-lokal)
 (function(){
@@ -381,6 +381,8 @@ document.getElementById('sec-log').addEventListener('toggle', function(){ if (th
   });
 })();
 refresh(); loadLog();
-setInterval(refresh, 5000);
+// Nur aktualisieren, solange der Tab sichtbar ist (spart Rechenzeit auf kleinen LoxBerrys)
+setInterval(function(){ if (!document.hidden) { refresh(); } }, 5000);
+document.addEventListener('visibilitychange', function(){ if (!document.hidden) { refresh(); } });
 </script>
 <?php LBWeb::lbfooter(); ?>

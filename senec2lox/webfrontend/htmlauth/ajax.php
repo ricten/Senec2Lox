@@ -1,5 +1,74 @@
 <?php
 /** AJAX-Schnittstelle der Senec2Lox-Oberflaeche (laeuft als loxberry hinter LoxBerry-Auth). */
+
+/**
+ * Letzte Zeilen einer Logdatei lesen (nur das Dateiende), LoxBerry-Kopfzeilen ausblenden, Secrets maskieren.
+ * @param string[] $secrets
+ * @return string[]
+ */
+function senecTailLog(string $file, array $secrets, int $max = 100): array
+{
+    $lines = [];
+    if (is_file($file)) {
+        $size = (int)filesize($file);
+        $raw = (string)@file_get_contents($file, false, null, max(0, $size - 65536));
+        $all = preg_split('/\r?\n/', $raw);
+        if ($size > 65536) {
+            array_shift($all);          // angeschnittene erste Zeile
+        }
+        foreach ($all as $ln) {
+            if ($ln === '' || preg_match('/^=+$/', $ln) || strpos($ln, '<LOGSTART>') !== false || strpos($ln, '<LOGEND>') !== false) {
+                continue;
+            }
+            $lines[] = $ln;
+        }
+        $lines = array_slice($lines, -$max);
+    }
+    foreach ($lines as &$l) {
+        foreach ($secrets as $s) {
+            if (is_string($s) && strlen($s) >= 4) {
+                $l = str_replace($s, '***', $l);
+            }
+        }
+    }
+    return $lines;
+}
+
+function senecReadJson(string $file): array
+{
+    $j = is_file($file) ? json_decode((string)@file_get_contents($file), true) : null;
+    return is_array($j) ? $j : [];
+}
+
+/*
+ * Schnellpfad fuer die zyklischen Abfragen (status, log): ohne LoxBerry-Bibliothek, ohne Klassen, ohne Session.
+ * Jede Abfrage nur Dateien lesen. Das spart auf kleinen LoxBerrys (Pi) viel Rechenzeit; die Session-Sperre
+ * wuerde ausserdem parallele Aufrufe mehrerer Browser-Tabs hintereinander stellen.
+ * Pfade: Webfrontend-Ordner = Plugin-Ordner; LoxBerry-Verzeichnis liegt 4 Ebenen darueber
+ * (<home>/webfrontend/htmlauth/plugins/<ordner>).
+ */
+$fastAction = $_REQUEST['action'] ?? '';
+if (($fastAction === 'status' || $fastAction === 'log') && !getenv('SENEC2LOX_DEV_DIR')) {
+    $folder = basename(__DIR__);
+    $home = dirname(__DIR__, 4);
+    header('Content-Type: application/json; charset=utf-8');
+    header('Cache-Control: no-store');
+    if ($fastAction === 'status') {
+        $st = senecReadJson((getenv('SENEC2LOX_SHM') ?: '/dev/shm') . '/' . $folder . '/status.json');
+        $alive = $st && (time() - (int)($st['time'] ?? 0)) < 10;
+        echo json_encode(['ok' => true, 'alive' => $alive, 'status' => $st ?: null,
+            'openapi_token' => (bool)($st['openapi_token'] ?? false), 'fingerprint_lala' => $st['fingerprint_lala'] ?? null],
+            JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        exit;
+    }
+    $cfgJ = senecReadJson($home . '/config/plugins/' . $folder . '/senec2lox.json');
+    $stateJ = senecReadJson($home . '/data/plugins/' . $folder . '/state.json');
+    $lines = senecTailLog($home . '/log/plugins/' . $folder . '/senec2lox.log', [
+        $cfgJ['connect']['subscription_key'] ?? '', $stateJ['openapi_token'] ?? '', $cfgJ['mqtt']['pass'] ?? '']);
+    echo json_encode(['ok' => true, 'lines' => $lines], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    exit;
+}
+
 require_once "loxberry_system.php";
 require_once LBPBINDIR . "/lib/bootstrap.php";
 
@@ -45,32 +114,8 @@ switch ($action) {
             'fingerprint_lala' => $state->get('lala_fp')]);
 
     case 'log':
-        $lines = [];
-        if (is_file($paths->logfile)) {
-            // nur das Dateiende lesen (Datei kann gross sein)
-            $size = (int)filesize($paths->logfile);
-            $raw = (string)@file_get_contents($paths->logfile, false, null, max(0, $size - 65536));
-            $all = preg_split('/\r?\n/', $raw);
-            if ($size > 65536) {
-                array_shift($all);          // angeschnittene erste Zeile
-            }
-            foreach ($all as $ln) {
-                // Kopf-/Trennzeilen der LoxBerry-Logbibliothek ausblenden
-                if ($ln === '' || preg_match('/^=+$/', $ln) || strpos($ln, '<LOGSTART>') !== false || strpos($ln, '<LOGEND>') !== false) {
-                    continue;
-                }
-                $lines[] = $ln;
-            }
-            $lines = array_slice($lines, -100);
-        }
-        foreach ($lines as &$l) {
-            foreach ([$s2mcfg['connect']['subscription_key'], (string)$state->get('openapi_token'), $s2mcfg['mqtt']['pass']] as $s) {
-                if (strlen($s) >= 4) {
-                    $l = str_replace($s, '***', $l);
-                }
-            }
-        }
-        out(['ok' => true, 'lines' => $lines]);
+        out(['ok' => true, 'lines' => senecTailLog($paths->logfile, [
+            $s2mcfg['connect']['subscription_key'], (string)$state->get('openapi_token'), $s2mcfg['mqtt']['pass']])]);
 
     case 'restart':
         sh('stop.sh');   // wartet, bis der Dienst beendet ist
