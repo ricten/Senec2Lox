@@ -26,6 +26,7 @@ Bei Widerspruch gilt die Spezifikation. Stellen mit „⚠ prüfen“ nicht als 
 - StateTexts basiert auf ioBroker.senec (MIT, © NoBl) – Copyright-Hinweis behalten.
 - **Plugin-Identität nie ändern:** LoxBerry bildet sie aus `AUTHOR.NAME` + `AUTHOR.EMAIL` + `PLUGIN.NAME` + `PLUGIN.FOLDER`. Eine Änderung macht das Paket zum *neuen* Plugin (zweite Installation statt Update).
 - MQTT-Client-ID enthält den Plugin-Ordner (`senec2lox_<Ordner>`); sonst verdrängen sich mehrere Instanzen am Broker.
+- Installationsskripte (auch `uninstall`) nie mit festem Ordnernamen: der Plugin-Ordner kommt aus `$3` (kann `senec2lox_000` heißen); sonst trifft man den Dienst eines anderen Plugins.
 - Kein MQTT-Paket-Dependency: eigener Client (`MqttClient.php`).
 - Weboberfläche: `LBWeb::lbheader()` überschreibt die globale Variable `$cfg` (stdClass). Eigene Konfiguration deshalb nie `$cfg` nennen (in index.php, ajax.php und senec2lox.php: `$s2mcfg`). Auch `mqtt_connectiondetails()` liest und überschreibt das globale `$cfg`.
 

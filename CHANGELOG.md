@@ -8,6 +8,11 @@ Release-Ablauf: Version in `senec2lox/plugin.cfg` und `senec2lox/bin/lib/AppVers
 
 ## [Unveröffentlicht]
 
+## [1.0.3] – 2026-11-06
+
+### Behoben
+- **Deinstallation beendete den falschen Dienst:** `uninstall` hatte den Plugin-Ordner fest als `senec2lox` eingetragen. Wurde ein zweites Plugin (Ordner z. B. `senec2lox_000`) deinstalliert, beendete das Skript den Dienst des Plugins `senec2lox` und ließ den Dienst des deinstallierten Plugins als Prozess ohne Dateien weiterlaufen. Der Ordner kommt jetzt aus dem von LoxBerry übergebenen Argument (`$3`); das Skript wartet auf das Ende des Dienstes und beendet Prozesse aus genau diesem Plugin-Ordner als Sicherheitsnetz.
+
 ## [1.0.2] – 2026-11-06
 
 ### Behoben

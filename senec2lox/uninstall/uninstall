@@ -1,7 +1,29 @@
 #!/bin/bash
-# Dienst beenden und RAM-Daten entfernen. OpenAPI-Eintrag im SENEC-Portal bitte selbst entfernen.
-FOLDER="senec2lox"
+# Deinstallation (laeuft als root). Beendet den Dienst DIESES Plugin-Ordners und entfernt die RAM-Daten.
+# Argumente von LoxBerry: $1 Temp-Name, $2 Plugin-Name, $3 Plugin-Ordner, $4 Version, $5 LBHOMEDIR
+# OpenAPI-Eintrag im SENEC-Portal bitte selbst entfernen.
+#
+# Der Ordner kommt aus $3 (kann z. B. senec2lox_000 heissen, wenn das Plugin ein zweites Mal installiert wurde).
+# Ein fest eingetragener Ordner wuerde den Dienst eines anderen Plugins beenden.
+FOLDER="${3:-senec2lox}"
 PIDFILE="/dev/shm/$FOLDER/senec2lox.pid"
-[ -f "$PIDFILE" ] && kill "$(cat "$PIDFILE")" 2>/dev/null
+
+if [ -f "$PIDFILE" ]; then
+    PID="$(cat "$PIDFILE")"
+    if [ -n "$PID" ] && kill "$PID" 2>/dev/null; then
+        for i in $(seq 1 20); do      # bis zu 10 s auf ein sauberes Ende warten
+            kill -0 "$PID" 2>/dev/null || break
+            sleep 0.5
+        done
+        kill -9 "$PID" 2>/dev/null
+    fi
+fi
+
+# Sicherheitsnetz: Prozesse, die noch aus dem Programmordner genau dieses Plugins laufen
+# (das Muster enthaelt den Ordner samt Schraegstrich, trifft also nicht senec2lox_000 beim Ordner senec2lox).
+if command -v pkill >/dev/null 2>&1; then
+    pkill -f "plugins/$FOLDER/senec2lox.php" 2>/dev/null
+fi
+
 rm -rf "/dev/shm/$FOLDER"
 exit 0
