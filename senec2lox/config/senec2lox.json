@@ -1,0 +1,43 @@
+{
+  "enabled": true,
+  "lala": {
+    "use": true,
+    "host": "",
+    "interval": 10,
+    "interval_full": 60,
+    "full_sections": "ENERGY,PV1,PM1OBJ1,TEMPMEASURE,BMS,FACTORY,SYS_UPDATE,WIZARD",
+    "timeout": 5,
+    "scheme": "auto",
+    "fast_sections": ""
+  },
+  "openapi": {
+    "use": false,
+    "host": "",
+    "interval": 60,
+    "timeout": 10,
+    "include": "battery,meter",
+    "device_name": "LoxBerry"
+  },
+  "connect": {
+    "use": false,
+    "subscription_key": "",
+    "system_filter": "",
+    "interval": 300,
+    "timeout": 30,
+    "include": "battery,meter,evse,bessNameplate"
+  },
+  "live_source_priority": "lala,openapi,connect",
+  "mqtt": {
+    "use_loxberry_broker": true,
+    "host": "",
+    "port": 1883,
+    "user": "",
+    "pass": "",
+    "topic_prefix": "senec",
+    "retain": true,
+    "only_changes": true,
+    "full_resend_minutes": 5,
+    "publish_raw": true
+  },
+  "log_level": "info"
+}

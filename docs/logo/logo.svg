@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Senec2Lox">
+  <rect width="512" height="512" rx="96" fill="#0b3c5d"/>
+  <rect x="69" y="209" width="242" height="172" rx="17" fill="none" stroke="#ffffff" stroke-width="18"/>
+  <rect x="86" y="226" width="208" height="138" rx="10" fill="#3ddc84"/>
+  <rect x="320" y="255" width="30" height="80" rx="9" fill="#ffffff"/>
+  <polygon points="201.2,250.2 154.3,302.0 183.7,302.0 173.2,339.8 225.7,285.2 196.3,285.2" fill="#ffd23f"/>
+  <circle cx="340" cy="175" r="14" fill="#7fd1ff"/>
+  <g fill="none" stroke="#7fd1ff" stroke-width="18" stroke-linecap="round">
+    <path d="M340 139 A36 36 0 0 1 376 175"/>
+    <path d="M340 103 A72 72 0 0 1 412 175"/>
+    <path d="M340 67 A108 108 0 0 1 448 175"/>
+  </g>
+</svg>

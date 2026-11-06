@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Senec2Lox">
+  <defs>
+    <radialGradient id="g" cx="0.40" cy="0.34" r="0.9">
+      <stop offset="0" stop-color="rgb(141, 198, 63)"/>
+      <stop offset="1" stop-color="rgb(63, 125, 16)"/>
+    </radialGradient>
+  </defs>
+  <circle cx="256" cy="256" r="240" fill="url(#g)"/>
+  <ellipse cx="256" cy="137" rx="196" ry="113" fill="#fff" fill-opacity="0.13"/>
+  <circle cx="256" cy="256" r="222" fill="none" stroke="#fff" stroke-opacity="0.27" stroke-width="3"/>
+  <rect x="118" y="118" width="78" height="150" rx="12" fill="#fff"/>
+  <rect x="132" y="130" width="50" height="8" rx="4" fill="#3f7d10"/>
+  <polygon points="161.4,181.3 140.5,206.7 153.7,206.7 147.1,228.7 173.5,198.9 159.8,198.9" fill="#3f7d10"/>
+  <g fill="#3f7d10" fill-opacity="0.55">
+    <rect x="136" y="238" width="42" height="3" rx="1.5"/>
+    <rect x="136" y="246" width="42" height="3" rx="1.5"/>
+    <rect x="136" y="254" width="42" height="3" rx="1.5"/>
+  </g>
+  <rect x="340" y="137" width="28" height="21" rx="0" fill="rgb(255,255,255)"/>
+  <rect x="342" y="139" width="24" height="19" rx="0" fill="rgb(38,172,172)"/>
+  <rect x="386" y="137" width="18" height="21" rx="0" fill="rgb(255,255,255)"/>
+  <rect x="388" y="139" width="14" height="19" rx="0" fill="rgb(242,140,28)"/>
+  <rect x="280" y="236" width="12" height="20" rx="0" fill="rgb(255,255,255)"/>
+  <rect x="282" y="236" width="8" height="18" rx="0" fill="rgb(242,140,28)"/>
+  <rect x="295" y="236" width="12" height="20" rx="0" fill="rgb(255,255,255)"/>
+  <rect x="297" y="236" width="8" height="18" rx="0" fill="rgb(40,120,200)"/>
+  <rect x="310" y="236" width="12" height="20" rx="0" fill="rgb(255,255,255)"/>
+  <rect x="312" y="236" width="8" height="18" rx="0" fill="rgb(255,255,255)"/>
+  <rect x="348" y="234" width="72" height="18" rx="0" fill="rgb(255,255,255)"/>
+  <rect x="350" y="236" width="68" height="14" rx="0" fill="rgb(226,42,72)"/>
+  <circle cx="358.0" cy="243" r="1.6" fill="rgb(255,255,255)"/>
+  <circle cx="363.6" cy="243" r="1.6" fill="rgb(255,255,255)"/>
+  <circle cx="369.2" cy="243" r="1.6" fill="rgb(255,255,255)"/>
+  <circle cx="374.8" cy="243" r="1.6" fill="rgb(255,255,255)"/>
+  <circle cx="380.4" cy="243" r="1.6" fill="rgb(255,255,255)"/>
+  <circle cx="386.0" cy="243" r="1.6" fill="rgb(255,255,255)"/>
+  <circle cx="391.6" cy="243" r="1.6" fill="rgb(255,255,255)"/>
+  <circle cx="397.2" cy="243" r="1.6" fill="rgb(255,255,255)"/>
+  <circle cx="402.8" cy="243" r="1.6" fill="rgb(255,255,255)"/>
+  <circle cx="408.4" cy="243" r="1.6" fill="rgb(255,255,255)"/>
+  <circle cx="414.0" cy="243" r="1.6" fill="rgb(255,255,255)"/>
+  <circle cx="419.6" cy="243" r="1.6" fill="rgb(255,255,255)"/>
+  <rect x="267" y="149" width="162" height="94" rx="2" fill="rgb(255,255,255)"/>
+  <rect x="270" y="152" width="156" height="88" rx="0" fill="rgb(104,190,64)"/>
+  <rect x="322" y="188" width="90" height="10" rx="0" fill="rgb(38,48,38)"/>
+  <rect x="330" y="191" width="32" height="4" rx="0" fill="rgb(200,210,200)"/>
+  <rect x="376" y="191" width="28" height="4" rx="0" fill="rgb(120,135,120)"/>
+  <line x1="208" y1="196" x2="254" y2="196" stroke="#fff" stroke-width="7"/>
+  <polygon points="266,196 252,185 252,207" fill="#fff"/>
+  <g fill="#fff" font-family="Arial, Helvetica, sans-serif" font-weight="700" text-anchor="middle">
+    <text x="256" y="352" font-size="62.6" textLength="330" lengthAdjust="spacingAndGlyphs">Senec2Lox</text>
+  </g>
+</svg>

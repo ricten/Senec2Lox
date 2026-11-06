@@ -1,0 +1,7 @@
+#!/bin/bash
+# Dienst beenden und RAM-Daten entfernen. OpenAPI-Eintrag im SENEC-Portal bitte selbst entfernen.
+FOLDER="senec2lox"
+PIDFILE="/dev/shm/$FOLDER/senec2lox.pid"
+[ -f "$PIDFILE" ] && kill "$(cat "$PIDFILE")" 2>/dev/null
+rm -rf "/dev/shm/$FOLDER"
+exit 0
