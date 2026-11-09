@@ -8,6 +8,11 @@ Release-Ablauf: Version in `senec2lox/plugin.cfg` und `senec2lox/bin/lib/AppVers
 
 ## [Unveröffentlicht]
 
+## [1.1.0] – 2026-11-09
+
+### Geändert
+- **Menü der Weboberfläche mit Reitern** (wie bei Nut2Lox): Einstellungen · MQTT · Einbindung in Loxone · Test · Logdateien. Bisher standen alle Bereiche als ausklappbare Abschnitte untereinander. Einstellungen (Allgemein, Lokal, OpenAPI, SENEC.Connect) und MQTT liegen im selben Formular, ein Speichern gilt für beide. Der Reiter „Test“ enthält Status und Wartung, „Einbindung in Loxone“ die Livewerte mit Eingangsnamen (`/` → `_`), „Logdateien“ das Log (wird nur geladen, solange der Reiter offen ist). Der zuletzt geöffnete Reiter wird im Browser gemerkt. Funktion und Konfiguration sind unverändert.
+
 ## [1.0.4] – 2026-11-06
 
 ### Geändert

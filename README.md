@@ -1,7 +1,7 @@
 # Senec2Lox – LoxBerry-Plugin
 <img src="docs/logo/logo_loxberry.png" alt="Senec2Lox Logo" width="128">
 
-**Version 1.0.4** · Benötigt PHP ≥ 8.4 · [Changelog](CHANGELOG.md)
+**Version 1.1.0** · Benötigt PHP ≥ 8.4 · [Changelog](CHANGELOG.md)
 
 Dokumentation: [docs/wiki/Home.md](docs/wiki/Home.md)
 
@@ -14,7 +14,7 @@ per MQTT am LoxBerry-Broker (→ MQTT-Gateway → Loxone). Details: [SENEC-LoxBe
 3. Plugin öffnen, IP des Speichers eintragen, speichern. Werte erscheinen unter `senec/live/*`.
 
 ## OpenAPI (optional)
-Reiter „Lokale OpenAPI“: „Am Speicher registrieren“ → Freigabe im Portal unter `https://mein-senec.de/endkunde/#/0/senec-open-api`.
+Reiter „Einstellungen“ → Bereich „Lokale OpenAPI“: „Am Speicher registrieren“ → Freigabe im Portal unter `https://mein-senec.de/endkunde/#/0/senec-open-api`.
 Registrierung erfolgt nur per Knopfdruck. Bei Deinstallation den Eintrag im Portal selbst entfernen.
 
 ## Entwicklung

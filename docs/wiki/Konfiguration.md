@@ -3,6 +3,20 @@
 Alle Einstellungen werden in der Weboberfläche vorgenommen und in `senec2lox.json` gespeichert (atomar geschrieben).
 Der Dienst erkennt Änderungen selbst (mtime-Prüfung) – ein Neustart ist nicht nötig. Änderungen am MQTT-Broker führen zu einem automatischen Reconnect.
 
+## Menü
+
+Die Weboberfläche hat fünf Reiter:
+
+| Reiter | Inhalt |
+|---|---|
+| Einstellungen | Bereiche *Allgemein*, *Lokal (lala.cgi)*, *Lokale OpenAPI*, *SENEC.Connect* (ausklappbar) |
+| MQTT | Broker, Topic-Präfix, retain, Reihenfolge der Live-Quellen |
+| Einbindung in Loxone | Hinweis zum MQTT-Gateway und die Livewerte mit Topic und Eingangsname |
+| Test | Status (Dienst, MQTT, Quellen) und Wartung |
+| Logdateien | Log des Dienstes (aktualisiert sich alle 5 s, solange der Reiter offen ist) |
+
+Einstellungen und MQTT liegen im selben Formular; **Speichern** gilt für beide.
+
 ## Allgemein
 
 | Einstellung | Standard | Beschreibung |
@@ -85,7 +99,7 @@ Den Key erhalten Sie auf <https://developer.senec.com> (anmelden → Produkt abo
 - Subscription-Key, Token und MQTT-Passwort werden nie geloggt und in der Oberfläche nicht im Klartext angezeigt.
 - Zertifikate der lokalen Schnittstellen sind selbstsigniert. Das Plugin merkt sich den SHA-256-Fingerprint beim ersten Kontakt (TOFU), warnt bei Änderung, übernimmt ihn aber und arbeitet weiter.
 
-## Wartung (Reiter „Wartung“)
+## Wartung (Reiter „Test“)
 
 | Aktion | Wirkung |
 |---|---|
@@ -95,8 +109,8 @@ Den Key erhalten Sie auf <https://developer.senec.com> (anmelden → Produkt abo
 | Fingerprints zurücksetzen | Vergisst die gemerkten Zertifikats-Fingerprints (lala.cgi und OpenAPI) |
 | Einstellungen auf Standard | Setzt die gesamte Konfiguration zurück (inkl. IP und Subscription-Key); der OpenAPI-Token bleibt erhalten |
 
-Den OpenAPI-Token löscht nur „Token vergessen“ im Reiter *Lokale OpenAPI*.
+Den OpenAPI-Token löscht nur „Token vergessen“ im Bereich *Lokale OpenAPI* (Reiter Einstellungen).
 
 ## Wallbox-Werte abfragen
 
-Im Reiter *Lokal (lala.cgi)* unter **Schnellabfrage → Wallbox** die gewünschten Datenpunkte anhaken (z. B. *Wallbox-Status*, *Fahrzeug verbunden*, *Ladeleistung*). Dann erscheinen `senec/live/wallbox_w`, `wallbox_fahrzeug_verbunden` und `wallbox_status_code` sowie alle gewählten Werte als Rohwerte unter `senec/raw/WALLBOX/<KEY>/<0-3>` (ein Eintrag je Wallbox). Welche Datenpunkte Ihr Gerät wirklich liefert, zeigt die **Vollabfrage → Sektion WALLBOX** (Rohwerte).
+Im Bereich *Lokal (lala.cgi)* (Reiter Einstellungen) unter **Schnellabfrage → Wallbox** die gewünschten Datenpunkte anhaken (z. B. *Wallbox-Status*, *Fahrzeug verbunden*, *Ladeleistung*). Dann erscheinen `senec/live/wallbox_w`, `wallbox_fahrzeug_verbunden` und `wallbox_status_code` sowie alle gewählten Werte als Rohwerte unter `senec/raw/WALLBOX/<KEY>/<0-3>` (ein Eintrag je Wallbox). Welche Datenpunkte Ihr Gerät wirklich liefert, zeigt die **Vollabfrage → Sektion WALLBOX** (Rohwerte).

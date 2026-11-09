@@ -4,7 +4,7 @@ Die lokale SENEC OpenAPI (Port 4424) braucht einen Token, der **einmalig am Spei
 
 ## Ablauf
 
-1. Reiter **Lokale OpenAPI** öffnen, Quelle aktivieren, IP eintragen (oder leer lassen = IP von lala.cgi), speichern.
+1. Im Reiter **Einstellungen** den Bereich **Lokale OpenAPI** öffnen, Quelle aktivieren, IP eintragen (oder leer lassen = IP von lala.cgi), speichern.
 2. Status zeigt **unregistered** → Button **„Am Speicher registrieren“** (Bestätigungsdialog).
    Das Plugin sendet `POST /v1/register` und speichert den zurückgegebenen Token in `state.json`.
 3. Status wechselt auf **pending** („Freigabe ausstehend“). Im Portal freigeben:

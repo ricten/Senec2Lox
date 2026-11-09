@@ -103,6 +103,8 @@ LBWeb::lbheader("Senec2Lox", "", "");
   .s2m .dd-btn { font-size: 90%; padding: 2px 10px; cursor: pointer; }
   .s2m select { font-size: 100%; padding: 4px; }
   .s2m .hint { color: #666; font-size: 90%; }
+  .s2m .s2m-tabs a { display: inline-block; padding: 6px 14px; margin: 0 4px 8px 0; border: 1px solid #999; border-radius: 4px; text-decoration: none; color: inherit; }
+  .s2m .s2m-tabs a.active { background: #6dac20; color: #fff; border-color: #6dac20; }
 </style>
 <div class="s2m">
 <p class="hint s2m-ver">Senec2Lox Version <?= h(AppVersion::CURRENT) ?></p>
@@ -110,24 +112,21 @@ LBWeb::lbheader("Senec2Lox", "", "");
 
 <div class="s2m-set">
 
-<div class="s2m-status"><h3>Status</h3>
-  <p>Dienst: <span id="st-service">...</span> &middot; MQTT: <span id="st-mqtt">...</span>
-     &middot; Live-Quelle: <span id="st-live">-</span></p>
-  <table id="st-sources"><tr><th>Quelle</th><th>Status</th><th>Letzte Abfrage</th><th>Meldung</th></tr></table>
-  <p id="st-error" class="s2m-bad"></p>
-  <p id="st-dup" class="s2m-bad"></p>
-  <button type="button" onclick="act('restart')">Neu starten</button>
-  <button type="button" onclick="act('stop')">Stoppen</button>
-  <p id="act-result"></p>
+<div class="s2m-tabs">
+  <a href="#einstellungen" data-tab="einstellungen">Einstellungen</a>
+  <a href="#mqtt" data-tab="mqtt">MQTT</a>
+  <a href="#loxone" data-tab="loxone">Einbindung in Loxone</a>
+  <a href="#test" data-tab="test">Test</a>
+  <a href="#logs" data-tab="logs">Logdateien</a>
 </div>
 
-<details class="s2m-sec"><summary>Livewerte</summary>
-  <table id="live-table"><tr><th>Topic</th><th>Wert</th></tr></table>
-</details>
+
+
 
 <form method="post" data-ajax="false">
 <input type="hidden" name="do" value="save"><input type="hidden" name="csrf" value="<?= h($csrf) ?>">
 
+<div class="s2m-pane" data-tab="einstellungen">
 <details class="s2m-sec"><summary>Allgemein</summary>
   <label><input type="checkbox" name="enabled" value="1"<?= $sel($s2mcfg['enabled']) ?>> Dienst aktiviert</label>
   <label>Loglevel
@@ -259,7 +258,11 @@ LBWeb::lbheader("Senec2Lox", "", "");
   <p class="hint">Key: <a href="https://developer.senec.com/instructions" target="_blank" rel="noopener">developer.senec.com</a> &rarr; Produkte abonnieren &rarr; Profil &rarr; Meine Abonnements.</p>
 </details>
 
-<details class="s2m-sec"><summary>MQTT</summary>
+<button type="submit">Speichern</button>
+</div>
+
+<div class="s2m-pane" data-tab="mqtt">
+<div class="s2m-status"><h3>MQTT</h3>
   <label><input type="checkbox" name="mqtt_lb" value="1"<?= $sel($s2mcfg['mqtt']['use_loxberry_broker']) ?>> LoxBerry-Broker verwenden</label>
   <label>Eigener Broker: Host <input type="text" name="mqtt_host" value="<?= h($s2mcfg['mqtt']['host']) ?>"></label>
   <label>Port <input type="number" name="mqtt_port" value="<?= h($s2mcfg['mqtt']['port']) ?>"></label>
@@ -272,18 +275,34 @@ LBWeb::lbheader("Senec2Lox", "", "");
   <label><input type="checkbox" name="mqtt_raw" value="1"<?= $sel($s2mcfg['mqtt']['publish_raw']) ?>> Rohwerte veroeffentlichen</label>
   <label>Reihenfolge der Live-Quellen <input type="text" name="live_source_priority" value="<?= h($s2mcfg['live_source_priority']) ?>"></label>
   <p class="hint">Gueltige Werte: lala, openapi, connect (Komma-getrennt).</p>
-</details>
-
+</div>
 <button type="submit">Speichern</button>
+</div>
 </form>
 
-<details class="s2m-sec"><summary>Loxone-Hinweis</summary>
+<div class="s2m-pane" data-tab="loxone">
+<div class="s2m-status"><h3>Einbindung in Loxone</h3>
   <p>Im LoxBerry-MQTT-Gateway die Topics <code><?= h($s2mcfg['mqtt']['topic_prefix']) ?>/#</code> (bzw.
      <code><?= h($s2mcfg['mqtt']['topic_prefix']) ?>/live/#</code> und <code><?= h($s2mcfg['mqtt']['topic_prefix']) ?>/online</code>) abonnieren.
-     Anschliessend im Loxone Config virtuelle Eingaenge (z. B. <code><?= h($s2mcfg['mqtt']['topic_prefix']) ?>_live_pv_w</code>) anlegen.</p>
-</details>
+     Das Gateway ersetzt <code>/</code> durch <code>_</code>. Anschliessend im Loxone Config virtuelle Eingaenge (z. B. <code><?= h($s2mcfg['mqtt']['topic_prefix']) ?>_live_pv_w</code>) anlegen.</p>
+</div>
+<div class="s2m-status"><h3>Livewerte</h3>
+  <table id="live-table"><tr><th>Topic</th><th>Eingangsname</th><th>Wert</th></tr></table>
+</div>
+</div>
 
-<details class="s2m-sec"><summary>Wartung</summary>
+<div class="s2m-pane" data-tab="test">
+<div class="s2m-status"><h3>Status</h3>
+  <p>Dienst: <span id="st-service">...</span> &middot; MQTT: <span id="st-mqtt">...</span>
+     &middot; Live-Quelle: <span id="st-live">-</span></p>
+  <table id="st-sources"><tr><th>Quelle</th><th>Status</th><th>Letzte Abfrage</th><th>Meldung</th></tr></table>
+  <p id="st-error" class="s2m-bad"></p>
+  <p id="st-dup" class="s2m-bad"></p>
+  <button type="button" onclick="act('restart')">Neu starten</button>
+  <button type="button" onclick="act('stop')">Stoppen</button>
+  <p id="act-result"></p>
+</div>
+<div class="s2m-status"><h3>Wartung</h3>
   <p class="hint">Der OpenAPI-Token wird von keiner dieser Aktionen geloescht (dafuer gibt es "Token vergessen" im Reiter OpenAPI).</p>
   <button type="button" onclick="act('restart', {}, 'wartung-result')">Dienst neu starten</button>
   <button type="button" onclick="act('clear_status', {}, 'wartung-result')">Status-Cache leeren</button>
@@ -291,12 +310,15 @@ LBWeb::lbheader("Senec2Lox", "", "");
   <button type="button" onclick="if(confirm('Zertifikats-Fingerprints zuruecksetzen?'))act('reset_fingerprint', {}, 'wartung-result')">Fingerprints zuruecksetzen</button>
   <button type="button" onclick="if(confirm('Alle Einstellungen auf Standardwerte zuruecksetzen? Der OpenAPI-Token bleibt erhalten. Die Seite wird neu geladen.'))act('reset_config', {}, 'wartung-result');setTimeout(function(){location.reload()},1500)">Einstellungen auf Standard</button>
   <p id="wartung-result"></p>
-</details>
+</div>
+</div>
 
-<details class="s2m-sec" id="sec-log"><summary>Log</summary>
+<div class="s2m-pane" data-tab="logs">
+<div class="s2m-status" id="sec-log"><h3>Logdateien</h3>
   <button type="button" onclick="loadLog()">Aktualisieren</button> <span class="hint">aktualisiert sich alle 5 s, solange der Bereich offen ist (letzte 100 Zeilen)</span>
   <pre id="log">-</pre>
-</details>
+</div>
+</div>
 
 </div>
 </div>
@@ -352,8 +374,8 @@ function refresh(){
         (s.time ? new Date(s.time*1000).toLocaleTimeString() : '-') + '</td><td>' + esc(s.error) + '</td></tr>';
     });
     document.getElementById('st-sources').innerHTML = rows;
-    var lt = '<tr><th>Topic</th><th>Wert</th></tr>', pre = <?= json_encode($s2mcfg['mqtt']['topic_prefix']) ?>;
-    Object.keys(st.live || {}).forEach(function(k){ lt += '<tr><td><code>' + esc(pre + '/live/' + k) + '</code></td><td>' + esc(st.live[k]) + '</td></tr>'; });
+    var lt = '<tr><th>Topic</th><th>Eingangsname</th><th>Wert</th></tr>', pre = <?= json_encode($s2mcfg['mqtt']['topic_prefix']) ?>;
+    Object.keys(st.live || {}).forEach(function(k){ lt += '<tr><td><code>' + esc(pre + '/live/' + k) + '</code></td><td>' + esc((pre + '/live/' + k).replace(/\//g, '_')) + '</td><td>' + esc(st.live[k]) + '</td></tr>'; });
     document.getElementById('live-table').innerHTML = lt;
     var oa = (src.openapi && src.openapi.status) || (j.openapi_token ? 'unbekannt' : 'unregistered');
     document.getElementById('oa-status').textContent = oa;
@@ -369,8 +391,25 @@ function loadLog(){
     if (atEnd) { pre.scrollTop = pre.scrollHeight; }
   }).catch(function(e){ document.getElementById('log').textContent = 'Log konnte nicht geladen werden: ' + e; });
 }
-setInterval(function(){ var d = document.getElementById('sec-log'); if (!document.hidden && d && d.open) { loadLog(); } }, 5000);
-document.getElementById('sec-log').addEventListener('toggle', function(){ if (this.open) { loadLog(); } });
+var curTab = 'einstellungen';
+function showTab(t){
+  var known = ['einstellungen', 'mqtt', 'loxone', 'test', 'logs'];
+  if (known.indexOf(t) < 0) { t = 'einstellungen'; }
+  curTab = t;
+  document.querySelectorAll('.s2m-pane').forEach(function(p){ p.style.display = (p.getAttribute('data-tab') === t) ? '' : 'none'; });
+  document.querySelectorAll('.s2m-tabs a').forEach(function(a){ a.className = (a.getAttribute('data-tab') === t) ? 'active' : ''; });
+  try { localStorage.setItem('s2m-tab', t); } catch (e) {}
+  if (t === 'logs') { loadLog(); }
+}
+document.querySelectorAll('.s2m-tabs a').forEach(function(a){
+  a.addEventListener('click', function(ev){ ev.preventDefault(); showTab(a.getAttribute('data-tab')); });
+});
+setInterval(function(){ if (!document.hidden && curTab === 'logs') { loadLog(); } }, 5000);
+(function(){
+  var t = (location.hash || '').replace('#', '');
+  if (!t) { try { t = localStorage.getItem('s2m-tab') || ''; } catch (e) {} }
+  showTab(t);
+})();
 // Zustand der Hauptbereiche merken (nur Browser-lokal)
 (function(){
   var secs = document.querySelectorAll('details.s2m-sec');
