@@ -1,6 +1,6 @@
 # Senec2Lox
 
-![Logo](../logo/logo_loxberry.png)
+![Logo](../logo/senec2lox.png)
 
 **Senec2Lox** ist ein LoxBerry-Plugin, das Daten eines SENEC-Stromspeichers abfragt und an den MQTT-Broker des LoxBerry veröffentlicht.
 Über das LoxBerry-MQTT-Gateway gelangen die Werte an den Loxone Miniserver.

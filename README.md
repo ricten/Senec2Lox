@@ -1,5 +1,5 @@
 # Senec2Lox – LoxBerry-Plugin
-<img src="docs/logo/logo_loxberry.png" alt="Senec2Lox Logo" width="128">
+<img src="docs/logo/senec2lox.png" alt="Senec2Lox Logo" width="128">
 
 **Version 1.4.0** · Benötigt PHP ≥ 8.4 · [Changelog](CHANGELOG.md)
 

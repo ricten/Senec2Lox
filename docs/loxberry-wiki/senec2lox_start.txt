@@ -3,7 +3,7 @@
 ===== Plugin-Daten =====
 
 ^ Autor | Rico Tengler |
-^ Logo | {{:plugins:senec2lox:logo_loxberry.png?64|Senec2Lox}} |
+^ Logo | {{:plugins:senec2lox:senec2lox.png?64|Senec2Lox}} |
 ^ Status | STABLE |
 ^ Version | 1.4.0 |
 ^ Min. LB Version | 4.0 (benötigt PHP 8.4) |

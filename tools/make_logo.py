@@ -4,8 +4,8 @@ Aufruf (aus dem Projektordner):  python tools/make_logo.py
 Benoetigt Pillow. Schrift fuer die PNGs: Arial Bold (Windows) bzw. DejaVu Sans Bold.
 
 Ausgabe:
-  docs/logo/logo_loxberry.svg|png   gruener LoxBerry-Stil mit Schriftzug Senec2Lox (wird als Plugin-Icon verwendet)
-  docs/logo/logo.svg|png            klassisches Logo (dunkelblau)
+  docs/logo/senec2lox.svg|png   gruener LoxBerry-Stil mit Schriftzug Senec2Lox (wird als Plugin-Icon verwendet)
+  docs/logo/senec2lox_klassisch.svg|png            klassisches Logo (dunkelblau)
   senec2lox/icons/icon_{64,128,256,512}.png  = LoxBerry-Stil
 """
 import os
@@ -246,11 +246,11 @@ if __name__ == "__main__":
     icon_dir = os.path.join(ROOT, "senec2lox", "icons")
     os.makedirs(logo_dir, exist_ok=True)
     os.makedirs(icon_dir, exist_ok=True)
-    for name, svg in (("logo.svg", SVG_CLASSIC), ("logo_loxberry.svg", SVG_LOXBERRY)):
+    for name, svg in (("senec2lox_klassisch.svg", SVG_CLASSIC), ("senec2lox.svg", SVG_LOXBERRY)):
         with open(os.path.join(logo_dir, name), "w", encoding="utf-8", newline="\n") as f:
             f.write(svg)
-    render_classic(512).save(os.path.join(logo_dir, "logo.png"))
-    render_loxberry(512).save(os.path.join(logo_dir, "logo_loxberry.png"))
+    render_classic(512).save(os.path.join(logo_dir, "senec2lox_klassisch.png"))
+    render_loxberry(512).save(os.path.join(logo_dir, "senec2lox.png"))
     for s in (64, 128, 256, 512):
         render_loxberry(s).save(os.path.join(icon_dir, f"icon_{s}.png"))
     print("ok")
