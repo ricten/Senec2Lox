@@ -46,3 +46,12 @@ Bei Widerspruch gilt die Spezifikation. Stellen mit „⚠ prüfen“ nicht als 
 
 ## Agents
 Siehe [AGENTS.md](AGENTS.md) und `.claude/agents/`.
+
+## Release-Ablauf und automatische Updates
+`plugin.cfg` hat `AUTOMATIC_UPDATES=true` und `RELEASECFG=https://raw.githubusercontent.com/ricten/Senec2Lox/main/release.cfg`. LoxBerry prüft täglich diese Datei (`VERSION`, `ARCHIVEURL`, `INFOURL`; Format wie im LoxBerry-Beispielplugin) und installiert die Version, wenn sie neuer ist als die installierte. Neue Installationen sind damit auf „automatische Release-Updates“ gestellt; schon installierte Versionen bekommen `RELEASECFG` erst durch die Neuinstallation von 1.4.0.
+1. Version in `plugin.cfg` und `AppVersion.php` erhöhen, Eintrag in `CHANGELOG.md`, Tests, `bash build.sh`.
+2. Committen (**ohne** `release.cfg`), pushen, Tag `vX.Y.Z` setzen, `gh release create vX.Y.Z senec2lox-X.Y.Z.zip senec2lox.zip …` (beide ZIPs anhängen: `bash build.sh` erzeugt neben dem ZIP mit Version ein gleiches **ZIP ohne Version**, damit der Link `https://github.com/ricten/Senec2Lox/releases/latest/download/senec2lox.zip` immer das neueste Release liefert).
+3. Danach `bash build.sh release-cfg` (schreibt `release.cfg` für die Version aus `plugin.cfg`), `release.cfg` committen und pushen. Erst jetzt sehen Installationen das Update. `release.cfg` darf nie auf eine Version zeigen, deren ZIP auf GitHub noch nicht existiert (sonst scheitert der Download bei allen). `release.cfg` liegt im Repo-Wurzelordner und nicht im ZIP.
+- **`release.cfg` nur nach Rücksprache mit Rico anlegen oder ändern** (auch `bash build.sh release-cfg` nicht ohne Freigabe): Sie löst bei allen Installationen mit aktivierten Auto-Updates sofort ein Update aus.
+- Der Plugin-Name in `plugin.cfg` muss gleich bleiben; `ARCHIVEURL` ist der direkte ZIP-Download (Release-Anhang), kein Seitenlink.
+- Weboberfläche: LoxBerry Design System (`lbheader(…, true)`, `lb-*`-Klassen, Farben nur über `var(--lb-…)`-Tokens mit Rückfallwert), kein jQuery Mobile.

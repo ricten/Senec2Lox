@@ -10,4 +10,6 @@ Kontext und Regeln: [CLAUDE.md](CLAUDE.md). Spezifikation: [SENEC-LoxBerry-Plugi
 | `test-writer` | Unit-Tests und Fake-Server | `tests/**` |
 | `spec-reviewer` | Abgleich Code ↔ Spezifikation / Abnahmekriterien (nur lesend) | – |
 
+Release-Ablauf (inkl. `release.cfg` für automatische Updates): siehe [CLAUDE.md](CLAUDE.md), Abschnitt „Release-Ablauf und automatische Updates“.
+
 Gemeinsame Regeln: Spezifikation zuerst lesen, keine hartkodierten Pfade, keine Secrets im Log, LF-Zeilenenden, offen berichten was nicht getestet werden konnte.

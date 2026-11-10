@@ -8,6 +8,20 @@ Release-Ablauf: Version in `senec2lox/plugin.cfg` und `senec2lox/bin/lib/AppVers
 
 ## [Unveröffentlicht]
 
+## [1.4.0] – 2026-11-10
+
+### Neu
+- **ZIP ohne Version im Namen** (`<name>.zip`) an jedem Release: `…/releases/latest/download/<name>.zip` zeigt immer auf das neueste Release (`bash build.sh` erzeugt beide ZIPs).
+- **Automatische Updates:** `plugin.cfg` hat jetzt `AUTOMATIC_UPDATES=true` und `RELEASECFG` (raw-URL der `release.cfg` im GitHub-Repo). LoxBerry prüft täglich diese Datei und installiert eine neuere Version. Neue Installationen stehen damit auf „automatische Release-Updates“ (in der Plugin-Verwaltung änderbar). Schon installierte Versionen bekommen `RELEASECFG` erst durch die Neuinstallation von 1.4.0. `bash build.sh release-cfg` schreibt die `release.cfg` (liegt im Repo, nicht im ZIP), der Release-Ablauf steht in `CLAUDE.md`.
+
+### Behoben
+- `plugin.cfg` hat jetzt `WEBSITE` (Repository auf GitHub): In der LoxBerry-Plugin-Verwaltung ist der Knopf „Dokumentation“ nicht mehr ausgegraut.
+
+### Geändert
+- **Weboberfläche im LoxBerry Design System** (`lb-*`-Klassen, `lbheader(…, true)`) statt jQuery Mobile: Schalter, Eingabefelder, Tabellen, Karten und aufklappbare Bereiche. Feldnamen, Speichern und Inhalte sind unverändert; Farben folgen dem gewählten LoxBerry-Theme (auch dunkel). Das Gateway-Abo-Feld nutzt die Theme-Farben.
+- Tests für die neue Oberfläche (Kopf ohne jQuery Mobile, Feldnamen, kein `data-role`).
+- Doku: Seitenlinks in `docs/wiki/` funktionieren im Repository (mit `.md`), Abschnitt „Automatische Updates“ in `Installation.md` und `README.md`.
+
 ## [1.3.1] – 2026-11-10
 
 ### Behoben

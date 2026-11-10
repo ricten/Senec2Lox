@@ -280,6 +280,16 @@ foreach (['einstellungen', 'mqtt', 'loxone', 'test', 'logs'] as $tab) {
 }
 [$o] = $uiPage('einstellungen');
 check('UI einstellungen: Formularfelder aus MQTT-Bereich sind trotzdem im Formular', str_contains($o, 'name="mqtt_prefix"'), true);
+// Design System statt jQuery Mobile
+foreach (['einstellungen', 'mqtt', 'loxone', 'test', 'logs'] as $tab) {
+    [$o] = $uiPage($tab);
+    check("UI $tab: Kopf ohne jQuery Mobile (nojqm)", str_contains($o, '<!--NOJQM:1-->'), true);
+    check("UI $tab: Inhalt im Design System (lb-content), kein data-role/data-ajax", [str_contains($o, 'class="lb-content s2m"'), str_contains($o, 'data-role='), str_contains($o, 'data-ajax=')], [true, false, false]);
+}
+[$o] = $uiPage('einstellungen');
+check('UI einstellungen: Feldnamen unveraendert (Formular)', [str_contains($o, 'name="enabled"'), str_contains($o, 'name="lala_host"'), str_contains($o, 'name="lala_scheme"'), str_contains($o, 'name="openapi_include[]"'), str_contains($o, 'name="connect_key"'), str_contains($o, 'name="mqtt_pass"'), str_contains($o, 'name="live_source_priority"'), str_contains($o, 'name="csrf"')], array_fill(0, 8, true));
+check('UI einstellungen: Schalter und Eingabefelder im Design System', [str_contains($o, 'class="lb-toggle"'), str_contains($o, 'class="lb-input"'), str_contains($o, 'class="lb-select"'), str_contains($o, 'lb-btn lb-btn-primary')], [true, true, true, true]);
+check('UI einstellungen: Auswahl Protokoll mit gewaehltem Wert', str_contains($o, '<option value="auto" selected>'), true);
 [$o] = $uiPage('unbekannt');
 check('UI: unbekannter Reiter faellt auf Einstellungen zurueck', preg_match('/data-tab="einstellungen">/', $o), 1);
 [$o] = $uiPage('loxone');
@@ -307,6 +317,12 @@ $dflt = trim((string)file_get_contents($root . '/senec2lox/config/mqtt_subscript
 check('Mitgelieferte Abo-Datei: senec/# (eine Zeile, kein INI)', $dflt, 'senec/#');
 
 // --- Installationspaket ---
+$pcfg = (string)file_get_contents($root . '/senec2lox/plugin.cfg');
+check('plugin.cfg: automatische Updates mit RELEASECFG (raw-URL der release.cfg im Repo)', [str_contains($pcfg, "\nAUTOMATIC_UPDATES=true"), str_contains($pcfg, "\nRELEASECFG=https://raw.githubusercontent.com/ricten/Senec2Lox/main/release.cfg"), str_contains($pcfg, "\nPRERELEASECFG=\n")], [true, true, true]);
+check('release.cfg gehoert nicht ins Plugin-Verzeichnis (liegt im Repo-Wurzelordner)', is_file($root . '/senec2lox/release.cfg'), false);
+check('plugin.cfg: WEBSITE gesetzt (sonst ist der Dokumentation-Knopf der Plugin-Verwaltung ausgegraut)', str_contains($pcfg, "
+WEBSITE=https://github.com/ricten/Senec2Lox
+"), true);
 check('plugin.cfg: Loglevel-Auswahl der Plugin-Verwaltung frei', str_contains((string)file_get_contents($root . '/senec2lox/plugin.cfg'), "\nCUSTOM_LOGLEVELS=true"), true);
 foreach ([[7, 'debug'], [6, 'info'], [5, 'info'], [4, 'warn'], [3, 'error'], [1, 'error']] as [$lb, $name]) {
     $lg = new Logger(null);

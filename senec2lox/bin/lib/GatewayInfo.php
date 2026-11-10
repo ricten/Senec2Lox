@@ -123,11 +123,12 @@ final class GatewayInfo
      */
     public static function feldHtml(array $gw, string $filter): string
     {
-        $farben = ['ok' => ['#e6f4e6', '#2a8a2a'], 'fehler' => ['#fbe9e7', '#c0392b'], 'hinweis' => ['#f2f2f2', '#777777']];
+        // Farben aus dem LoxBerry Design System (--lb-success usw., folgt dem gewaehlten Theme, auch dunkel); Rueckfall: feste Farben
+        $farben = ['ok' => 'var(--lb-success,#2a8a2a)', 'fehler' => 'var(--lb-danger,#c0392b)', 'hinweis' => 'var(--lb-text-muted,#777777)'];
         $state = isset($farben[$gw['state'] ?? '']) ? $gw['state'] : 'hinweis';
-        [$grund, $rand] = $farben[$state];
+        $rand = $farben[$state];
         $h = fn($s): string => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
-        $o = '<div class="gw-abo gw-abo-' . $state . '" style="background:' . $grund . ';border-left:4px solid ' . $rand
+        $o = '<div class="gw-abo gw-abo-' . $state . '" style="background:color-mix(in srgb,' . $rand . ' 14%,transparent);border-left:4px solid ' . $rand
             . ';padding:6px 10px;border-radius:3px"><code>' . $h($filter) . '</code> <b style="color:' . $rand . '">' . $h($gw['text'] ?? '') . '</b>';
         $topics = array_values((array)($gw['topics'] ?? []));
         if ($topics) {

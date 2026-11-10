@@ -5,9 +5,9 @@
 ^ Autor | Rico Tengler |
 ^ Logo | {{:plugins:senec2lox:logo_loxberry.png?64|Senec2Lox}} |
 ^ Status | STABLE |
-^ Version | 1.0.4 |
+^ Version | 1.4.0 |
 ^ Min. LB Version | 4.0 (benötigt PHP 8.4) |
-^ Release Download | [[https://github.com/ricten/Senec2Lox/releases/latest|GitHub Releases (aktuelle Version)]] \\ [[https://github.com/ricten/Senec2Lox/releases/download/v1.0.4/senec2lox-1.0.4.zip|senec2lox-1.0.4.zip]] |
+^ Release Download | [[https://github.com/ricten/Senec2Lox/releases/latest|GitHub Releases (aktuelle Version)]] \\ [[https://github.com/ricten/Senec2Lox/releases/download/v1.4.0/senec2lox-1.4.0.zip|senec2lox-1.4.0.zip]] |
 ^ Pre-Release Download | - |
 ^ Quellcode | [[https://github.com/ricten/Senec2Lox|github.com/ricten/Senec2Lox]] (MIT-Lizenz) |
 ^ Beschreibung | Liest einen SENEC-Stromspeicher aus (lokal per ''lala.cgi'', per lokaler SENEC OpenAPI oder über die SENEC.Connect-Cloud) und veröffentlicht die Werte per MQTT. Über das LoxBerry-MQTT-Gateway gelangen sie an den Loxone Miniserver. |
@@ -59,6 +59,10 @@ Eine **Standard-IP gibt es nicht**: Ohne eingetragene IP zeigt der Status „nic
 ==== 2.1 Update ====
 
 Beim Update bleiben **Konfiguration und OpenAPI-Token** erhalten (sie werden vor dem Update gesichert und danach zurückgespielt). Neue Einstellungen ergänzt das Plugin automatisch mit Standardwerten.
+
+**Automatische Updates:** Ab Version 1.4.0 liefert Senec2Lox eine ''release.cfg'' im GitHub-Repository mit. Neue Installationen stehen in der Plugin-Verwaltung bei „Automatische Updates“ auf //Releases//: LoxBerry prüft täglich und installiert neuere Versionen selbst. Bei einer bereits installierten Version einmal von Hand auf 1.4.0 (oder neuer) aktualisieren, danach lässt sich die Einstellung (//Aus//, //Benachrichtigen//, //Releases//) in der Plugin-Verwaltung ändern.
+
+**Immer das neueste Release:** [[https://github.com/ricten/Senec2Lox/releases/latest/download/senec2lox.zip|senec2lox.zip]] (ZIP ohne Version im Dateinamen, zeigt immer auf die aktuelle Version).
 
 **Wichtig:** Autor, Plugin-Name und Ordner bestimmen die Identität des Plugins. Installieren Sie keine Pakete mit anderem Autor oder Namen über ein bestehendes Plugin, sonst legt LoxBerry ein **zweites Plugin** an (zweite Instanz).
 
@@ -316,6 +320,11 @@ Zuerst: Plugin öffnen und **Status** und **Log** ansehen. Für mehr Details den
 Der vollständige Verlauf steht im [[https://github.com/ricten/Senec2Lox/blob/main/CHANGELOG.md|CHANGELOG.md]].
 
 ^ Version ^ Änderungen ^
+| 1.4.0 | Automatische Updates (''release.cfg''), Weboberfläche im LoxBerry Design System (Theme-Farben, auch dunkel) |
+| 1.3.1 | Loglevel-Auswahl der Plugin-Verwaltung wieder da und wirksam (Stufe 3 Fehler, 4 Warnungen, 6 Info, 7 Debug, ohne Neustart); eigene Loglevel-Auswahl entfällt |
+| 1.3.0 | Status und Lebenszeichen: ''senec/status/ok'', ''status/zaehler'', ''status/ts'' |
+| 1.2.0 | Healthcheck für die LoxBerry-Healthcheck-Seite, Prüfung des Gateway-Abos (grün ab einem passenden Abo), offizielle Menüleiste, Abo-Datei ''mqtt_subscriptions.cfg'' für Gateway V1 |
+| 1.1.0 | Weboberfläche mit Reitern (Einstellungen, MQTT, Einbindung in Loxone, Test, Logdateien) |
 | 1.0.4 | Mindestversion LoxBerry 4.0, weniger Rechenzeit der Weboberfläche (Schnellpfad für Status/Log, Pause im Hintergrund-Tab) |
 | 1.0.3 | Deinstallation beendet den Dienst des richtigen Plugin-Ordners |
 | 1.0.2 | Eindeutige MQTT-Client-ID je Plugin-Ordner, Erkennung einer zweiten Instanz, stabilerer Stopp/Start, keine Standard-IP mehr |

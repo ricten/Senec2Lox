@@ -1,5 +1,8 @@
 #!/bin/bash
 # Baut senec2lox-<version>.zip aus senec2lox/ (ohne tests/, .git, docs/).
+#   bash build.sh              baut das ZIP
+#   bash build.sh release-cfg  schreibt release.cfg (Repo-Wurzel, nicht im ZIP) fuer die Version aus plugin.cfg; erst NACH dem GitHub-Release
+#                              ausfuehren und committen: die Datei darf nie auf ein noch nicht vorhandenes ZIP zeigen
 cd "$(dirname "$0")" || exit 1
 VER="$(grep '^VERSION=' senec2lox/plugin.cfg | cut -d= -f2 | tr -d '\r')"
 CODEVER="$(grep -o "CURRENT = '[^']*'" senec2lox/bin/lib/AppVersion.php | cut -d"'" -f2)"
@@ -10,6 +13,16 @@ fi
 if ! grep -q "^## \[$VER\]" CHANGELOG.md; then
     echo "CHANGELOG.md hat keinen Eintrag fuer Version $VER" >&2
     exit 1
+fi
+if [ "${1:-}" = "release-cfg" ]; then
+    printf '%s
+'         '[AUTOUPDATE]'         '# release.cfg - wird von der LoxBerry-Plugin-Verwaltung fuer automatische Updates gelesen (RELEASECFG in plugin.cfg).'         '# Erzeugt mit "bash build.sh release-cfg" NACH dem GitHub-Release; nie auf eine Version zeigen lassen, deren ZIP noch fehlt.'         ''         '# Version des aktuellen Releases (muss neuer sein als die installierte Version)'         "VERSION=$VER"         ''         '# Direkter Download des Plugin-ZIP (Release-Anhang)'         "ARCHIVEURL=https://github.com/ricten/Senec2Lox/releases/download/v$VER/senec2lox-$VER.zip"         ''         '# Seite mit Hinweisen zu diesem Release'         "INFOURL=https://github.com/ricten/Senec2Lox/releases/tag/v$VER" > release.cfg
+    echo "release.cfg fuer Version $VER geschrieben"
+    exit 0
+fi
+if [ -f release.cfg ]; then
+    RCVER="$(grep '^VERSION=' release.cfg | cut -d= -f2 | tr -d '')"
+    [ "$RCVER" != "$VER" ] && echo "Hinweis: release.cfg steht auf $RCVER, plugin.cfg auf $VER (release.cfg erst nach dem GitHub-Release mit 'bash build.sh release-cfg' aktualisieren)" >&2
 fi
 OUT="$PWD/senec2lox-$VER.zip"
 rm -f "$OUT"
@@ -32,4 +45,7 @@ with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as z:
                 z.writestr(info, fh.read())
 PYEOF
 fi
+# Zusaetzlich ein ZIP ohne Version im Namen: https://github.com/ricten/<Repo>/releases/latest/download/senec2lox.zip zeigt dann immer auf das neueste Release
+cp -f "$OUT" "$PWD/senec2lox.zip"
 echo "$OUT"
+echo "$PWD/senec2lox.zip"
