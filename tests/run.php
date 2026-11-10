@@ -307,7 +307,15 @@ $dflt = trim((string)file_get_contents($root . '/senec2lox/config/mqtt_subscript
 check('Mitgelieferte Abo-Datei: senec/# (eine Zeile, kein INI)', $dflt, 'senec/#');
 
 // --- Installationspaket ---
-check('plugin.cfg: Loglevel kommt aus dem Plugin, nicht aus der Verwaltung', str_contains((string)file_get_contents($root . '/senec2lox/plugin.cfg'), "\nCUSTOM_LOGLEVELS=false"), true);
+check('plugin.cfg: Loglevel-Auswahl der Plugin-Verwaltung frei', str_contains((string)file_get_contents($root . '/senec2lox/plugin.cfg'), "\nCUSTOM_LOGLEVELS=true"), true);
+foreach ([[7, 'debug'], [6, 'info'], [5, 'info'], [4, 'warn'], [3, 'error'], [1, 'error']] as [$lb, $name]) {
+    $lg = new Logger(null);
+    $lg->setLoxberryLevel($lb);
+    $ref = new ReflectionProperty($lg, 'level');
+    check("Logger: LoxBerry-Stufe $lb = $name", $ref->getValue($lg), ['debug' => 4, 'info' => 3, 'warn' => 2, 'error' => 1][$name]);
+}
+[$o] = $uiPage('einstellungen');
+check('UI: keine eigene Loglevel-Auswahl mehr, Hinweis auf die Plugin-Verwaltung', !str_contains($o, 'name="log_level"') && str_contains($o, 'LoxBerry-Plugin-Verwaltung eingestellt'), true);
 check('kein leeres preinstall.sh', is_file($root . '/senec2lox/preinstall.sh'), false);
 
 // --- Dienst gegen Fake-Speicher (lala.cgi) und Fake-Broker: Status und Lebenszeichen ---

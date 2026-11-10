@@ -37,7 +37,7 @@ Bei Widerspruch gilt die Spezifikation. Stellen mit „⚠ prüfen“ nicht als 
 - Build: `bash build.sh`.
 
 ## Vorgaben aus dem LoxBerry-Entwicklerwiki (Stand 2026-11-10)
-- `plugin.cfg`: `CUSTOM_LOGLEVELS=true` schaltet die Loglevel-Auswahl der Plugin-Verwaltung frei. Senec2Lox hat einen eigenen Loglevel (Einstellung `log_level`), deshalb `false`. Version dreiteilig ohne Buchstaben, `TITLE` höchstens 25 Zeichen.
+- `plugin.cfg`: `CUSTOM_LOGLEVELS=true` schaltet die Loglevel-Auswahl der Plugin-Verwaltung frei. Senec2Lox nutzt wie alle Plugins den Loglevel der Plugin-Verwaltung (`LBSystem::pluginloglevel()`, im Betrieb alle 30 s neu gelesen), deshalb `true`; die Einstellung `log_level` in der Konfiguration ist nur noch Rückfall ohne LoxBerry. Version dreiteilig ohne Buchstaben, `TITLE` höchstens 25 Zeichen.
 - **Gateway-Abo:** `config/mqtt_subscriptions.cfg` ist **zeilenweise** (ein Topic je Zeile), kein INI. Nur das Gateway V1 liest sie; das **Gateway V2 liest sie nicht**, das Abo muss dort von Hand unter „Abonnements“ stehen. Die Oberfläche prüft das (`GatewayInfo::subscription`, Kopie aus `../loxberry-plugins/common/php/GatewayInfo.php`; Änderungen zuerst dort). Nie behaupten, das Plugin trage das Abo selbst ein.
 - Ungenutzte Installationsskripte (`preinstall.sh` usw.) nicht mitliefern.
 - Healthcheck: `bin/healthcheck` (Argumente `title` und `check`, Ausgabe nur als JSON mit `desc`, `status`, `result`, optional `logfile`; 3 Fehler = Benachrichtigung und E-Mail, 4 Warnung, 5 OK, 6 Info; schnell, nur lesend). Ein erwarteter Zustand (z. B. Dienst bewusst abgeschaltet) ist nie Fehler oder Warnung.

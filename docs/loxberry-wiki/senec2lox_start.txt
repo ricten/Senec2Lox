@@ -86,7 +86,7 @@ Der Status ist immer sichtbar und aktualisiert sich alle 5 Sekunden:
 
 ^ Einstellung ^ Standard ^ Beschreibung ^
 | Dienst aktiviert | an | Aus = der Dienst bleibt im Leerlauf, fragt nichts ab und trennt MQTT |
-| Loglevel | info | ''error'', ''warn'', ''info'', ''debug''; gilt nur hier, nicht der Loglevel der LoxBerry-Pluginverwaltung |
+| Loglevel | – | wird in der LoxBerry-Plugin-Verwaltung eingestellt (Stufe 3 = nur Fehler, 4 = Warnungen, 6 = Info, 7 = Debug); Änderungen gelten nach höchstens 30 s ohne Neustart |
 
 ==== 3.3 Lokal (lala.cgi) ====
 

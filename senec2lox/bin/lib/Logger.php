@@ -3,7 +3,8 @@
  * Logging ueber die LoxBerry-Logbibliothek (LBLog, falls vorhanden), sonst direkt in die Logdatei.
  * Maskiert Secrets, entprellt wiederholte Meldungen und haelt die Datei klein.
  *
- * Der Loglevel wird ausschliesslich ueber die Plugin-Einstellung "log_level" bestimmt (error, warn, info, debug).
+ * Der Loglevel kommt aus der LoxBerry-Pluginverwaltung (setLoxberryLevel); ohne LoxBerry (Entwicklung) gilt die
+ * Plugin-Einstellung "log_level" (error, warn, info, debug).
  * LBLog bekommt deshalb einen festen Level 7 und filtert nicht selbst - sonst wuerden Meldungen
  * zusaetzlich vom Loglevel der LoxBerry-Pluginverwaltung verschluckt.
  */
@@ -33,6 +34,12 @@ final class Logger
     public function setLevel(string $level): void
     {
         $this->level = self::LEVELS[$level] ?? 3;
+    }
+
+    /** LoxBerry-Loglevel 0-7 (3 Fehler, 4 Warnung, 6 Info, 7 Debug). */
+    public function setLoxberryLevel(int $lb): void
+    {
+        $this->level = $lb >= 7 ? 4 : ($lb >= 5 ? 3 : ($lb === 4 ? 2 : 1));
     }
 
     public function addSecret(string $s): void

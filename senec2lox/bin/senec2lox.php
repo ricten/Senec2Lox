@@ -77,7 +77,17 @@ $findDuplicates = function () use ($paths) {
 };
 
 /** Konfiguration (neu) laden und Quellen aufbauen. */
-$reload = function () use (&$s2mcfg, &$cfgMtime, $paths, $log, $state, &$sources, &$snap, &$status) {
+/** Loglevel der LoxBerry-Pluginverwaltung (Stufe 0 = nicht gesetzt: dann bleibt die Plugin-Einstellung). */
+$applyLogLevel = function () use ($log): void {
+    if (!getenv('SENEC2LOX_DEV_DIR') && class_exists('LBSystem') && method_exists('LBSystem', 'pluginloglevel')) {
+        $lvl = (int)LBSystem::pluginloglevel();
+        if ($lvl > 0) {
+            $log->setLoxberryLevel($lvl);
+        }
+    }
+};
+$logLevelCheck = 0;
+$reload = function () use (&$s2mcfg, &$cfgMtime, $paths, $log, $applyLogLevel, $state, &$sources, &$snap, &$status) {
     clearstatcache(true, $paths->config);
     $m = is_file($paths->config) ? (int)filemtime($paths->config) : 0;
     if ($m === $cfgMtime && $s2mcfg !== null) {
@@ -85,7 +95,8 @@ $reload = function () use (&$s2mcfg, &$cfgMtime, $paths, $log, $state, &$sources
     }
     $cfgMtime = $m;
     $s2mcfg = Config::load($paths->config);
-    $log->setLevel($s2mcfg['log_level']);
+    $log->setLevel($s2mcfg['log_level']);   // Rueckfall (Entwicklung); im Betrieb gilt der Loglevel der LoxBerry-Pluginverwaltung
+    $applyLogLevel();
     $log->addSecret($s2mcfg['connect']['subscription_key']);
     $log->addSecret($s2mcfg['mqtt']['pass']);
     $log->info('Konfiguration geladen');
@@ -286,6 +297,10 @@ while ($running) {
     ];
     @file_put_contents($paths->statusFile(), json_encode($st));
     $log->rotateCheck();
+    if ($now >= $logLevelCheck) {      // Aenderung des Loglevels in der Pluginverwaltung ohne Neustart uebernehmen
+        $logLevelCheck = $now + 30;
+        $applyLogLevel();
+    }
     sleep(1);
   } catch (Throwable $e) {
     // Ein Fehler in einer Runde darf den Dienst nicht beenden (sonst Unterbrechung bis zum Watchdog)

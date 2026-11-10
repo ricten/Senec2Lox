@@ -22,7 +22,7 @@ Einstellungen und MQTT liegen im selben Formular; **Speichern** gilt für beide.
 | Einstellung | Standard | Beschreibung |
 |---|---|---|
 | Dienst aktiviert | an | Aus = Dienst läuft weiter, fragt aber nichts ab und verbindet nicht |
-| Loglevel | `info` | `error`, `warn`, `info`, `debug`. Wird nur hier eingestellt; die Einstellung der LoxBerry-Pluginverwaltung wird nicht verwendet |
+| Loglevel | – | Wird in der LoxBerry-Plugin-Verwaltung eingestellt (wie bei den anderen Plugins), nicht im Plugin. Stufe 3 = nur Fehler, 4 = Warnungen, 6 = Info, 7 = Debug. Änderungen gelten nach höchstens 30 s ohne Neustart |
 
 ## Lokal (lala.cgi)
 

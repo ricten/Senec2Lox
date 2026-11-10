@@ -66,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['do'] ?? '') === 'save') {
             'user' => $p('mqtt_user'), 'pass' => $pass !== '' ? $pass : $s2mcfg['mqtt']['pass'],
             'topic_prefix' => $p('mqtt_prefix', 'senec'), 'retain' => $b('mqtt_retain'), 'only_changes' => $b('mqtt_only_changes'),
             'full_resend_minutes' => (int)$p('mqtt_resend', '5'), 'publish_raw' => $b('mqtt_raw')];
-        $n['log_level'] = $p('log_level', 'info');
+        $n['log_level'] = $s2mcfg['log_level'];   // gilt nur noch als Rueckfall ohne LoxBerry
         $n = Config::validate($n);
         $msg = Config::save($paths->config, $n) ? 'Gespeichert. Der Dienst uebernimmt die Aenderungen automatisch.' : 'Speichern fehlgeschlagen.';
         $s2mcfg = $n;
@@ -136,10 +136,7 @@ LBWeb::lbheader("Senec2Lox", "", "");
 <div class="s2m-pane" data-tab="einstellungen"<?= $hide('einstellungen') ?>>
 <details class="s2m-sec"><summary>Allgemein</summary>
   <label><input type="checkbox" name="enabled" value="1"<?= $sel($s2mcfg['enabled']) ?>> Dienst aktiviert</label>
-  <label>Loglevel
-    <select data-role="none" name="log_level"><?php foreach (['error', 'warn', 'info', 'debug'] as $l) { ?>
-      <option value="<?= $l ?>"<?= $s2mcfg['log_level'] === $l ? ' selected' : '' ?>><?= $l ?></option><?php } ?></select></label>
-  <p class="hint">Der Loglevel wird hier festgelegt; die Einstellung der LoxBerry-Pluginverwaltung wird nicht verwendet.</p>
+  <p class="hint">Der Loglevel wird in der LoxBerry-Plugin-Verwaltung eingestellt (Plugin-Eintrag, Auswahl „Loglevel“). Für die Fehlersuche dort „Debug“ wählen.</p>
 </details>
 
 <details class="s2m-sec"><summary>Lokal (lala.cgi)</summary>

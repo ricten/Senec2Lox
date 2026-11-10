@@ -8,6 +8,14 @@ Release-Ablauf: Version in `senec2lox/plugin.cfg` und `senec2lox/bin/lib/AppVers
 
 ## [Unveröffentlicht]
 
+## [1.3.1] – 2026-11-10
+
+### Behoben
+- **Loglevel-Auswahl in der LoxBerry-Plugin-Verwaltung fehlte** (seit 1.2.0 stand `CUSTOM_LOGLEVELS` auf `false`). Sie ist wieder da und wirkt jetzt auch: Der Dienst nutzt den Loglevel der Plugin-Verwaltung wie die anderen Plugins (Stufe 3 = nur Fehler, 4 = Warnungen, 6 = Info, 7 = Debug) und liest ihn alle 30 s neu, ein Neustart ist nicht nötig. Vorher hatte die Auswahl in 1.1.0 keine Wirkung.
+
+### Geändert
+- Die eigene Loglevel-Auswahl im Reiter „Einstellungen“ entfällt (zwei Einstellungen wären widersprüchlich). `log_level` in `senec2lox.json` gilt nur noch als Rückfall ohne LoxBerry. **Nach dem Update steht die Auswahl in der Plugin-Verwaltung evtl. auf Stufe 3 (nur Fehler): für die bisherigen Info-Meldungen auf 6 stellen.**
+
 ## [1.3.0] – 2026-11-10
 
 ### Neu
