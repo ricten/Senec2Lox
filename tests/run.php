@@ -173,5 +173,206 @@ check('wallbox nicht verbunden', $wl['wallbox_fahrzeug_verbunden'], 0);
 check('ohne wallbox keine Topics', array_key_exists('wallbox_w', Mapper::liveFromLala(['ENERGY' => ['GUI_GRID_POW' => 1.0]])), false);
 check('wallbox im Katalog', in_array('WALLBOX.STATE', Catalog::fastFlat(), true), true);
 
+// --- Gateway-Hilfen (Kopie von common/php/GatewayInfo.php; eigene Tests dort: common/tests/run.php) ---
+check('GatewayInfo: senec/# deckt senec/live/pv_w', GatewayInfo::covers('senec/#', 'senec/#'), true);
+check('GatewayInfo: senec/live/# deckt senec/# nicht', GatewayInfo::covers('senec/live/#', 'senec/#'), false);
+check('GatewayInfo: Standard-UDP-Port', GatewayInfo::udpPort(null, []), 11884);
+
+// --- Healthcheck (LoxBerry-Healthcheck-Seite) ---
+$php = PHP_BINARY;
+$root = dirname(__DIR__);
+$work = sys_get_temp_dir() . '/senec_test_' . getmypid();
+$hcDir = $work . '/hc';
+@mkdir($hcDir . '/run', 0777, true);
+$hc = function (string $arg, ?array $status) use ($php, $root, $hcDir): array {
+    $f = $hcDir . '/run/status.json';
+    @unlink($f);
+    if ($status !== null) {
+        file_put_contents($f, json_encode($status));
+    }
+    $p = proc_open([$php, $root . '/senec2lox/bin/healthcheck', $arg], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes, null,
+        array_merge(getenv(), ['SENEC2LOX_DEV_DIR' => $hcDir]));
+    $out = (string)stream_get_contents($pipes[1]);
+    $err = (string)stream_get_contents($pipes[2]);
+    fclose($pipes[1]);
+    fclose($pipes[2]);
+    $rc = proc_close($p);
+    return [$out, $err, $rc];
+};
+$ok = ['ok' => true, 'status' => 'ok', 'error' => null, 'time' => time()];
+$basis = ['service' => 'running', 'time' => time(), 'mqtt' => true, 'mqtt_error' => null, 'duplicates' => [],
+    'live_source' => 'lala', 'sources' => ['lala' => $ok, 'openapi' => $ok]];
+[$o, $e, $rc] = $hc('title', null);
+check('Healthcheck title', trim($o), 'Senec2Lox: Dienst, MQTT-Broker und SENEC-Abfrage');
+check('Healthcheck title: Exitcode 0, keine Fehlerausgabe', [$rc, $e], [0, '']);
+check('Healthcheck ohne Argument: keine Ausgabe', $hc('', null)[0], '');
+$res = function (?array $st) use ($hc): array {
+    [$o, $e, $rc] = $hc('check', $st);
+    $j = json_decode($o, true);
+    return [is_array($j) ? $j : ['status' => -1, 'result' => $o], $rc, $e];
+};
+[$j, $rc, $e] = $res(null);
+check('Healthcheck: ohne Status = Fehler 3', $j['status'], 3);
+check('Healthcheck: Dienst laeuft nicht im Text', str_contains($j['result'], 'Der Dienst läuft nicht'), true);
+check('Healthcheck: Exitcode 0, keine Fehlerausgabe', [$rc, $e], [0, '']);
+check('Healthcheck: veralteter Status (3 min) = Fehler 3', $res(['time' => time() - 180] + $basis)[0]['status'], 3);
+check('Healthcheck: 60 s alter Status (langsame Quelle) noch ok', $res(['time' => time() - 60] + $basis)[0]['status'], 5);
+$j = $res(['service' => 'disabled', 'time' => time()])[0];
+check('Healthcheck: abgeschaltet = Info 6', $j['status'], 6);
+check('Healthcheck: abgeschaltet im Text', str_contains($j['result'], 'abgeschaltet'), true);
+$j = $res(['mqtt' => false, 'mqtt_error' => 'Verbindung abgelehnt'] + $basis)[0];
+check('Healthcheck: Broker weg = Warnung 4', $j['status'], 4);
+check('Healthcheck: Broker-Grund im Text', str_contains($j['result'], 'Verbindung abgelehnt'), true);
+$j = $res(['duplicates' => ['senec2lox_000']] + $basis)[0];
+check('Healthcheck: zweite Instanz = Warnung 4', $j['status'], 4);
+check('Healthcheck: zweite Instanz im Text', str_contains($j['result'], 'senec2lox_000'), true);
+check('Healthcheck: keine Quelle = Info 6', $res(['sources' => []] + $basis)[0]['status'], 6);
+$j = $res(['sources' => ['lala' => $ok, 'openapi' => ['ok' => false, 'status' => 'unreachable', 'error' => 'Zeitueberschreitung', 'time' => time()]]] + $basis)[0];
+check('Healthcheck: Quelle ohne Antwort = Warnung 4', $j['status'], 4);
+check('Healthcheck: Quelle und Grund im Text', str_contains($j['result'], 'openapi (unreachable: Zeitueberschreitung)'), true);
+$j = $res($basis)[0];
+check('Healthcheck: alles gut = OK 5', $j['status'], 5);
+check('Healthcheck: Text zaehlt Quellen und nennt Live-Quelle', $j['result'], '2 Quelle(n) in Ordnung, Live-Werte aus lala');
+check('Healthcheck: ohne Logdatei kein logfile', isset($j['logfile']), false);
+file_put_contents($hcDir . '/senec2lox.log', "x\n");
+check('Healthcheck: mit Logdatei der Pfad', $res($basis)[0]['logfile'] ?? null, $hcDir . '/senec2lox.log');
+check('Healthcheck: Ausgabe ist genau eine JSON-Zeile', substr_count(rtrim($hc('check', $basis)[0], "\n"), "\n"), 0);
+
+// --- Weboberflaeche mit Attrappen der LoxBerry-Bibliotheken ---
+// Rendert jeden Reiter (ohne echtes LoxBerry): findet undefinierte Variablen, Syntax- und Laufzeitfehler und prueft Menueleiste
+// und Gateway-Abo. Nicht pruefbar: das echte Aussehen in LoxBerry (jQuery Mobile).
+$uiDir = $work . '/ui';
+foreach (['config', 'log', 'data', 'sys', 'dev', 'sess'] as $sub) {
+    @mkdir("$uiDir/$sub", 0777, true);
+}
+$uiPage = function (string $tab, array $env = []) use ($php, $root, $uiDir): array {
+    $e = array_merge(getenv(), [
+        'STUB_INDEX' => $root . '/senec2lox/webfrontend/htmlauth/index.php', 'STUB_BIN' => $root . '/senec2lox/bin', 'STUB_CONFIG' => "$uiDir/config",
+        'STUB_LOG' => "$uiDir/log", 'STUB_DATA' => "$uiDir/data", 'STUB_SYSCONFIG' => "$uiDir/sys", 'SENEC2LOX_DEV_DIR' => "$uiDir/dev",
+    ], $env);
+    $cmd = [$php, '-d', 'display_errors=1', '-d', 'error_reporting=-1', '-d', 'include_path="' . $root . '/tests/stubs"', '-d', 'session.save_path="' . "$uiDir/sess" . '"',
+        $root . '/tests/ui_page.php', $tab];
+    $p = proc_open($cmd, [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes, null, $e);
+    $out = (string)stream_get_contents($pipes[1]);
+    $err = (string)stream_get_contents($pipes[2]);
+    fclose($pipes[1]);
+    fclose($pipes[2]);
+    proc_close($p);
+    return [$out, $err];
+};
+$bad = fn(string $o, string $e) => (bool)preg_match('/(Warning|Notice|Fatal error|Deprecated|Parse error|Uncaught)/', $o . $e);
+file_put_contents("$uiDir/sys/general.json", json_encode(['Mqtt' => ['Gatewayversion' => 2]]));
+file_put_contents("$uiDir/sys/subscriptions.json", json_encode(['Subscriptions' => [['Id' => 'shellies/#']]]));
+foreach (['einstellungen', 'mqtt', 'loxone', 'test', 'logs'] as $tab) {
+    [$o, $e] = $uiPage($tab);
+    check("UI $tab: ohne PHP-Warnungen und -Fehler", [$bad($o, $e), $e], [false, '']);
+    check("UI $tab: Kopf und Fuss", str_contains($o, '<!--HEADER:') && str_contains($o, '<!--FOOTER-->'), true);
+    preg_match('/<!--NAVBAR:(.*?)-->/', $o, $m);
+    $nav = json_decode($m[1] ?? '[]', true) ?: [];
+    check("UI $tab: Menueleiste mit 5 Eintraegen", count($nav), 5);
+    $aktiv = array_values(array_filter($nav, fn($n) => !empty($n['active'])));
+    check("UI $tab: genau ein aktiver Eintrag, und zwar dieser", [count($aktiv), $aktiv[0]['URL'] ?? null], [1, '?tab=' . $tab]);
+    check("UI $tab: kein eigener Tab-Block mehr", str_contains($o, 's2m-tabs'), false);
+    // Alle Bereiche bleiben im Formular (sonst gingen beim Speichern Felder verloren); nur der gewaehlte ist sichtbar
+    check("UI $tab: alle fuenf Bereiche vorhanden", preg_match_all('/class="s2m-pane" data-tab="/', $o), 5);
+    check("UI $tab: genau vier Bereiche ausgeblendet", preg_match_all('/class="s2m-pane" data-tab="[a-z]+" style="display:none"/', $o), 4);
+    check("UI $tab: dieser Bereich sichtbar", preg_match('/class="s2m-pane" data-tab="' . $tab . '">/', $o), 1);
+}
+[$o] = $uiPage('einstellungen');
+check('UI einstellungen: Formularfelder aus MQTT-Bereich sind trotzdem im Formular', str_contains($o, 'name="mqtt_prefix"'), true);
+[$o] = $uiPage('unbekannt');
+check('UI: unbekannter Reiter faellt auf Einstellungen zurueck', preg_match('/data-tab="einstellungen">/', $o), 1);
+[$o] = $uiPage('loxone');
+check('UI loxone: Gateway V2, Abo fehlt, mit Anleitung', str_contains($o, 'Gateway V2: Das Abo „senec/#“ fehlt'), true);
+[$o] = $uiPage('mqtt');
+check('UI mqtt: nichts abonniert = rotes Feld ohne Topic-Liste', str_contains($o, 'gw-abo-fehler') && !str_contains($o, 'gw-abo-ok') && !str_contains($o, '<ul style="margin:4px 0 0 18px'), true);
+file_put_contents("$uiDir/sys/subscriptions.json", json_encode(['Subscriptions' => [['Id' => 'senec/#']]]));
+[$o] = $uiPage('loxone');
+check('UI loxone: Gateway V2, Abo eingetragen', str_contains($o, 'Gateway V2: eingetragen (senec/#)'), true);
+[$o] = $uiPage('mqtt');
+check('UI mqtt: vollstaendig abonniert = gruenes Feld mit Topic-Liste', str_contains($o, 'gw-abo-ok') && str_contains($o, '<li><code>senec/#</code></li>') && !str_contains($o, 'gw-abo-fehler'), true);
+file_put_contents("$uiDir/sys/subscriptions.json", json_encode(['Subscriptions' => [['Id' => 'senec/live/#'], ['Id' => 'senec/online']]]));
+[$o] = $uiPage('mqtt');
+check('UI mqtt: nur ein Teil abonniert = gruen (nicht rot)', str_contains($o, 'gw-abo-ok') && !str_contains($o, 'gw-abo-fehler'), true);
+check('UI mqtt: Teil-Abo: Hinweis und beide Topics aufgelistet', str_contains($o, 'teilweise abonniert (senec/live/#, senec/online)') && str_contains($o, '<li><code>senec/live/#</code></li>') && str_contains($o, '<li><code>senec/online</code></li>'), true);
+file_put_contents("$uiDir/sys/subscriptions.json", json_encode(['Subscriptions' => [['Id' => 'senec/#']]]));
+[$o] = $uiPage('test');
+check('UI test: Gateway-Abo auch im Reiter Test', str_contains($o, 'Gateway V2: eingetragen (senec/#)'), true);
+file_put_contents("$uiDir/sys/general.json", json_encode(['Mqtt' => ['Gatewayversion' => 1]]));
+file_put_contents("$uiDir/config/mqtt_subscriptions.cfg", "senec/#\n");
+[$o] = $uiPage('loxone');
+check('UI loxone: Gateway V1, Abo in der Datei = gruen', str_contains($o, 'Gateway V1: eingetragen (senec/#)') && str_contains($o, 'gw-abo-ok'), true);
+check('UI loxone: Tabelle Status und Lebenszeichen mit Eingangsnamen', str_contains($o, '<td>senec_status_zaehler</td>') && str_contains($o, '<td>senec_status_ok</td>') && str_contains($o, '<td>senec_status_ts</td>') && str_contains($o, '<td>senec_online</td>'), true);
+$dflt = trim((string)file_get_contents($root . '/senec2lox/config/mqtt_subscriptions.cfg'));
+check('Mitgelieferte Abo-Datei: senec/# (eine Zeile, kein INI)', $dflt, 'senec/#');
+
+// --- Installationspaket ---
+check('plugin.cfg: Loglevel kommt aus dem Plugin, nicht aus der Verwaltung', str_contains((string)file_get_contents($root . '/senec2lox/plugin.cfg'), "\nCUSTOM_LOGLEVELS=false"), true);
+check('kein leeres preinstall.sh', is_file($root . '/senec2lox/preinstall.sh'), false);
+
+// --- Dienst gegen Fake-Speicher (lala.cgi) und Fake-Broker: Status und Lebenszeichen ---
+// Der Dienst braucht die PHP-Erweiterung curl (auf dem LoxBerry vorhanden). Lokal ohne curl wird der Test uebersprungen und gemeldet.
+$curlArgs = [];
+if (!function_exists('curl_init')) {
+    $extDir = dirname(PHP_BINARY) . '/ext';
+    if (is_file($extDir . '/php_curl.dll')) {
+        $curlArgs = ['-d', 'extension_dir=' . $extDir, '-d', 'extension=curl'];
+    } else {
+        $curlArgs = null;
+    }
+}
+if ($curlArgs === null) {
+    echo "HINWEIS: PHP ohne curl - Dienst-Test (status/ok, status/zaehler, status/ts) uebersprungen\n";
+} else {
+    $e2e = $work . '/e2e';
+    @mkdir($e2e, 0777, true);
+    file_put_contents($e2e . '/senec2lox.json', json_encode(['enabled' => true,
+        'lala' => ['use' => true, 'host' => '127.0.0.1:18981', 'interval' => 2, 'scheme' => 'http'],
+        'mqtt' => ['use_loxberry_broker' => false, 'host' => '127.0.0.1', 'port' => 18930, 'topic_prefix' => 'senec', 'retain' => true]]));
+    $start = function (array $args, string $out) use ($php, $e2e) {
+        return proc_open(array_merge([$php], $args), [1 => ['file', $out, 'w'], 2 => ['file', $out . '.err', 'w']], $pp,
+            null, array_merge(getenv(), ['SENEC2LOX_DEV_DIR' => $e2e]));
+    };
+    $e2e_stop = function ($p): void {
+        if (is_resource($p)) {
+            proc_terminate($p);
+            proc_close($p);
+        }
+    };
+    $mq = $start([$root . '/tests/fake_mqtt.php', '18930'], $e2e . '/mqtt.out');
+    $la = $start(['-S', '127.0.0.1:18981', $root . '/tests/fake_lala.php'], $e2e . '/lala.out');
+    usleep(800000);
+    $dm = $start(array_merge($curlArgs, [$root . '/senec2lox/bin/senec2lox.php']), $e2e . '/daemon.out');
+    $mqttLog = fn(): string => (string)@file_get_contents($e2e . '/mqtt.out');
+    $deadline = time() + 25;
+    while (time() < $deadline && !preg_match('~senec/status/zaehler = 2~', $mqttLog())) {
+        usleep(300000);
+    }
+    $m = $mqttLog();
+    $e2e_stop($dm);
+    $e2e_stop($la);
+    $e2e_stop($mq);
+    check('Dienst: Live-Wert kommt an (senec/live/pv_w)', (bool)preg_match('~senec/live/pv_w = 1800~', $m), true);
+    check('Dienst: status/ok = 1 bei aktuellen Live-Werten', (bool)preg_match('~senec/status/ok = 1~', $m), true);
+    check('Dienst: status/zaehler zaehlt weiter (1, dann 2)', (bool)preg_match('~senec/status/zaehler = 1\b.*senec/status/zaehler = 2~s', $m), true);
+    check('Dienst: status/ts ist ein Unix-Zeitstempel', (bool)preg_match('~senec/status/ts = (\d{10})~', $m, $tm) && abs((int)$tm[1] - time()) < 60, true);
+}
+
+// Aufraeumen
+function rrmdir(string $d): void
+{
+    if (!is_dir($d)) {
+        return;
+    }
+    foreach (scandir($d) as $f) {
+        if ($f === "." || $f === "..") {
+            continue;
+        }
+        is_dir("$d/$f") ? rrmdir("$d/$f") : @unlink("$d/$f");
+    }
+    @rmdir($d);
+}
+rrmdir($work);
+
 echo "$count Tests, $fails Fehler\n";
 exit($fails ? 1 : 0);

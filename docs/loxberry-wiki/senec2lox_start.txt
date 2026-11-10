@@ -223,6 +223,9 @@ Alle gewählten Wallbox-Werte stehen zusätzlich als Rohwerte unter ''senec/raw/
 
 ^ Topic ^ Bedeutung ^
 | ''senec/info/modell'', ''seriennummer'', ''nennkapazitaet_modul_wh'', ''module_anzahl'', ''firmware'' | selten aktualisiert |
+| ''senec/status/ok'' | 1 = aktuelle Live-Werte aus mindestens einer Quelle, sonst 0 (nicht retained) |
+| ''senec/status/zaehler'' | Lebenszeichen: zählt bei jedem Abfrage-Durchgang 0…999 weiter (im Gateway als No Cache; nicht retained) |
+| ''senec/status/ts'' | Unix-Zeit des letzten Durchgangs (nicht retained) |
 | ''senec/online'' | 1 = Dienst läuft, 0 = beendet (Last Will, retained) |
 | ''senec/lala/ok'', ''senec/openapi/ok'', ''senec/connect/ok'' | 1/0: letzte Abfrage erfolgreich |
 | ''senec/openapi/status'' | ok, pending, rejected, unreachable, unregistered |
@@ -249,6 +252,8 @@ Im Plugin **MQTT Gateway** das Abonnement ergänzen:
   * ''senec/live/#'' (empfohlen) und ''senec/online''
   * oder ''senec/#'' für alles inklusive Rohwerte (sehr viele Topics)
 
+**Gateway V2:** Das Abonnement muss von Hand im MQTT Gateway unter „Abonnements“ eingetragen werden. Die Abo-Datei des Plugins (''senec/#'') liest nur das Gateway V1. Das Plugin prüft es selbst: In den Reitern „Einbindung in Loxone“ und „Test“ steht, ob das Abo eingetragen ist. Ändert man den Topic-Präfix, muss das Abo angepasst werden.
+
 ==== 6.2 Virtuelle Eingänge ====
 
 Das Gateway ersetzt ''/'' durch ''_''. Aus ''senec/live/pv_w'' wird der Eingang ''senec_live_pv_w''. Typische Eingänge:
@@ -260,6 +265,9 @@ Das Gateway ersetzt ''/'' durch ''_''. Aus ''senec/live/pv_w'' wird der Eingang 
 | ''senec_live_batterie_soc'' | Ladestand (%) |
 | ''senec_live_batterie_laden_w'' / ''senec_live_batterie_entladen_w'' | Laden / Entladen (W, immer ≥ 0) |
 | ''senec_online'' | Dienst läuft (1/0) |
+| ''senec_status_ok'' | 1 = aktuelle Live-Werte vorhanden |
+| ''senec_status_zaehler'' | Lebenszeichen, zählt 0…999 weiter (im Gateway No Cache) |
+| ''senec_status_ts'' | Unix-Zeit des letzten Durchgangs |
 
 Für Anzeigen eignen sich die getrennten, immer positiven Topics besser als ''netz_w''/''batterie_w'' mit Vorzeichen. Mit ''senec_online'' lässt sich ein Ausfall des Dienstes überwachen.
 

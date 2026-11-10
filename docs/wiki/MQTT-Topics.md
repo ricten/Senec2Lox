@@ -36,6 +36,9 @@ Beispiele für `status_text`: `LADEN (14)`, `ENTLADEN (16)`, `AKKU VOLL (13)`, `
 
 | Topic | Bedeutung |
 |---|---|
+| `senec/status/ok` | `1`, wenn aktuelle Live-Werte aus mindestens einer Quelle vorliegen, sonst `0` (nicht retained) |
+| `senec/status/zaehler` | zählt bei jedem Abfrage-Durchgang 0…999 weiter (Lebenszeichen für die Ausfallerkennung in Loxone; im Gateway als *No Cache*; nicht retained) |
+| `senec/status/ts` | Unix-Zeit des letzten Durchgangs (nicht retained) |
 | `senec/online` | `1` Dienst läuft, `0` beendet (Last Will, retained) |
 | `senec/lala/ok`, `senec/openapi/ok`, `senec/connect/ok` | `1`/`0` letzte Abfrage erfolgreich |
 | `senec/openapi/status` | `ok`, `pending`, `rejected`, `unreachable`, `unregistered` |

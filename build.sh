@@ -26,7 +26,7 @@ with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as z:
         for f in files:
             p = os.path.join(root, f)
             info = zipfile.ZipInfo.from_file(p, os.path.relpath(p, 'senec2lox').replace(os.sep, '/'))
-            info.external_attr = (0o755 if f.endswith(('.sh', '.php')) or f in ('daemon', 'uninstall') or f.startswith('cron.') else 0o644) << 16
+            info.external_attr = (0o755 if f.endswith(('.sh', '.php')) or f in ('daemon', 'uninstall', 'healthcheck') or f.startswith('cron.') else 0o644) << 16
             info.compress_type = zipfile.ZIP_DEFLATED
             with open(p, 'rb') as fh:
                 z.writestr(info, fh.read())

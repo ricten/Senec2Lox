@@ -52,6 +52,8 @@ $lastError = null;
 $errorUntil = 0;
 $startTime = time();
 $sentCount = 0;
+$statusZaehler = 0;     // status/zaehler: 0...999, laeuft bei jedem Durchgang weiter
+$statusPubAt = 0;
 $mqttLosses = 0;
 $mqttLastLoss = null;
 $duplicates = [];
@@ -222,10 +224,12 @@ while ($running) {
     }
 
     // --- Quellen ---
+    $polled = false;    // wurde in dieser Runde mindestens eine Quelle abgefragt? (= ein "Durchgang" fuer status/zaehler)
     foreach ($sources as $name => &$s) {
         if ($s['next'] > $now) {
             continue;
         }
+        $polled = true;
         $r = $s['obj']->poll($now);
         if ($mqtt && $mqtt->connected()) {
             $mqtt->loop();   // Keepalive nach (evtl. langer) Abfrage
@@ -254,6 +258,16 @@ while ($running) {
     if ($mqtt && $mqtt->connected() && $pub) {
         $sentCount += $pub->publish($built['topics'], $now);
         $mqtt->loop();   // erkennt Abbrueche, sendet Keepalive; Verlust wird zu Beginn der naechsten Runde protokolliert
+        // Status und Lebenszeichen (Konvention aller Plugins): bei jedem Abfrage-Durchgang, mindestens alle 10 s; nie retained.
+        // ok = 1, wenn aktuelle Live-Werte aus mindestens einer Quelle vorliegen.
+        if ($polled || $now - $statusPubAt >= 10) {
+            $statusPubAt = $now;
+            $statusZaehler = ($statusZaehler + 1) % 1000;
+            $sp = $s2mcfg['mqtt']['topic_prefix'] . '/status/';
+            $mqtt->publish($sp . 'ok', $built['live_source'] !== null ? '1' : '0', false);
+            $mqtt->publish($sp . 'zaehler', (string)$statusZaehler, false);
+            $mqtt->publish($sp . 'ts', (string)time(), false);
+        }
     }
 
     // --- Status in RAM ---

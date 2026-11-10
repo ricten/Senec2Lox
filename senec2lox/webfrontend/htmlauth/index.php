@@ -80,6 +80,25 @@ $inc = function (string $csv): array {
     return array_filter(explode(',', $csv));
 };
 
+// Reiter wählt der Server (?tab=...): Alle Bereiche bleiben im Formular, nur die nicht gewählten sind ausgeblendet,
+// damit ein Speichern nie Felder der anderen Reiter verliert.
+$tabs = ['einstellungen' => 'Einstellungen', 'mqtt' => 'MQTT', 'loxone' => 'Einbindung in Loxone', 'test' => 'Test', 'logs' => 'Logdateien'];
+$tab = (string)($_GET['tab'] ?? 'einstellungen');
+if (!isset($tabs[$tab])) {
+    $tab = 'einstellungen';
+}
+$hide = fn(string $t): string => $t === $tab ? '' : ' style="display:none"';
+// Menüleiste der LoxBerry-Oberfläche: $navbar muss vor lbheader() definiert sein
+$navbar = [];
+$nr = 10;
+foreach ($tabs as $k => $t) {
+    $navbar[$nr] = ['Name' => $t, 'URL' => '?tab=' . $k] + ($tab === $k ? ['active' => true] : []);
+    $nr += 10;
+}
+// Kommt das Abo beim Gateway an? (Gateway V2 liest die Abo-Datei des Plugins nicht)
+$aboFilter = $s2mcfg['mqtt']['topic_prefix'] . '/#';
+$gw = GatewayInfo::subscription($aboFilter, GatewayInfo::general());
+
 LBWeb::lbheader("Senec2Lox", "", "");
 ?>
 <style>
@@ -103,8 +122,7 @@ LBWeb::lbheader("Senec2Lox", "", "");
   .s2m .dd-btn { font-size: 90%; padding: 2px 10px; cursor: pointer; }
   .s2m select { font-size: 100%; padding: 4px; }
   .s2m .hint { color: #666; font-size: 90%; }
-  .s2m .s2m-tabs a { display: inline-block; padding: 6px 14px; margin: 0 4px 8px 0; border: 1px solid #999; border-radius: 4px; text-decoration: none; color: inherit; }
-  .s2m .s2m-tabs a.active { background: #6dac20; color: #fff; border-color: #6dac20; }
+  .s2m .s2m-warn { color: #9a6700; font-weight: bold; }
 </style>
 <div class="s2m">
 <p class="hint s2m-ver">Senec2Lox Version <?= h(AppVersion::CURRENT) ?></p>
@@ -112,21 +130,10 @@ LBWeb::lbheader("Senec2Lox", "", "");
 
 <div class="s2m-set">
 
-<div class="s2m-tabs">
-  <a href="#einstellungen" data-tab="einstellungen">Einstellungen</a>
-  <a href="#mqtt" data-tab="mqtt">MQTT</a>
-  <a href="#loxone" data-tab="loxone">Einbindung in Loxone</a>
-  <a href="#test" data-tab="test">Test</a>
-  <a href="#logs" data-tab="logs">Logdateien</a>
-</div>
-
-
-
-
 <form method="post" data-ajax="false">
 <input type="hidden" name="do" value="save"><input type="hidden" name="csrf" value="<?= h($csrf) ?>">
 
-<div class="s2m-pane" data-tab="einstellungen">
+<div class="s2m-pane" data-tab="einstellungen"<?= $hide('einstellungen') ?>>
 <details class="s2m-sec"><summary>Allgemein</summary>
   <label><input type="checkbox" name="enabled" value="1"<?= $sel($s2mcfg['enabled']) ?>> Dienst aktiviert</label>
   <label>Loglevel
@@ -261,8 +268,10 @@ LBWeb::lbheader("Senec2Lox", "", "");
 <button type="submit">Speichern</button>
 </div>
 
-<div class="s2m-pane" data-tab="mqtt">
+<div class="s2m-pane" data-tab="mqtt"<?= $hide('mqtt') ?>>
 <div class="s2m-status"><h3>MQTT</h3>
+  <p>Gateway-Abo (damit die Werte im Miniserver ankommen):</p>
+  <?= GatewayInfo::feldHtml($gw, $aboFilter) ?>
   <label><input type="checkbox" name="mqtt_lb" value="1"<?= $sel($s2mcfg['mqtt']['use_loxberry_broker']) ?>> LoxBerry-Broker verwenden</label>
   <label>Eigener Broker: Host <input type="text" name="mqtt_host" value="<?= h($s2mcfg['mqtt']['host']) ?>"></label>
   <label>Port <input type="number" name="mqtt_port" value="<?= h($s2mcfg['mqtt']['port']) ?>"></label>
@@ -280,22 +289,34 @@ LBWeb::lbheader("Senec2Lox", "", "");
 </div>
 </form>
 
-<div class="s2m-pane" data-tab="loxone">
+<div class="s2m-pane" data-tab="loxone"<?= $hide('loxone') ?>>
 <div class="s2m-status"><h3>Einbindung in Loxone</h3>
-  <p>Im LoxBerry-MQTT-Gateway die Topics <code><?= h($s2mcfg['mqtt']['topic_prefix']) ?>/#</code> (bzw.
-     <code><?= h($s2mcfg['mqtt']['topic_prefix']) ?>/live/#</code> und <code><?= h($s2mcfg['mqtt']['topic_prefix']) ?>/online</code>) abonnieren.
+  <p>Im LoxBerry-MQTT-Gateway das Topic <code><?= h($aboFilter) ?></code> abonnieren (bzw.
+     <code><?= h($s2mcfg['mqtt']['topic_prefix']) ?>/live/#</code> und <code><?= h($s2mcfg['mqtt']['topic_prefix']) ?>/online</code>).
      Das Gateway ersetzt <code>/</code> durch <code>_</code>. Anschliessend im Loxone Config virtuelle Eingaenge (z. B. <code><?= h($s2mcfg['mqtt']['topic_prefix']) ?>_live_pv_w</code>) anlegen.</p>
+  <p>Gateway-Abo:</p>
+  <?= GatewayInfo::feldHtml($gw, $aboFilter) ?>
+  <p class="hint">Beim Gateway V2 muss das Abo von Hand im MQTT Gateway unter „Abonnements“ eingetragen werden; die Abo-Datei des Plugins liest nur das Gateway V1. Ändert man den Topic-Präfix, muss das Abo angepasst werden.</p>
+</div>
+<div class="s2m-status"><h3>Status und Lebenszeichen</h3>
+  <table><tr><th>Topic</th><th>Eingangsname</th><th>Bedeutung</th></tr>
+  <?php foreach ([['online', '1 = Dienst läuft, 0 = beendet (retained)'], ['status/ok', '1 = aktuelle Live-Werte vorhanden, sonst 0'],
+      ['status/zaehler', 'Lebenszeichen: zählt 0…999 weiter (im Gateway „No Cache“); steht er still, ist der Dienst ausgefallen'],
+      ['status/ts', 'Unix-Zeit des letzten Durchgangs']] as [$stTopic, $stText]) { $stFull = $s2mcfg['mqtt']['topic_prefix'] . '/' . $stTopic; ?>
+  <tr><td><code><?= h($stFull) ?></code></td><td><?= h(str_replace('/', '_', $stFull)) ?></td><td><?= h($stText) ?></td></tr>
+  <?php } ?></table>
 </div>
 <div class="s2m-status"><h3>Livewerte</h3>
   <table id="live-table"><tr><th>Topic</th><th>Eingangsname</th><th>Wert</th></tr></table>
 </div>
 </div>
 
-<div class="s2m-pane" data-tab="test">
+<div class="s2m-pane" data-tab="test"<?= $hide('test') ?>>
 <div class="s2m-status"><h3>Status</h3>
   <p>Dienst: <span id="st-service">...</span> &middot; MQTT: <span id="st-mqtt">...</span>
      &middot; Live-Quelle: <span id="st-live">-</span></p>
   <table id="st-sources"><tr><th>Quelle</th><th>Status</th><th>Letzte Abfrage</th><th>Meldung</th></tr></table>
+  <p>Gateway-Abo <code><?= h($aboFilter) ?></code>: <span class="<?= $gw['state'] === 'ok' ? 's2m-ok' : ($gw['state'] === 'fehler' ? 's2m-bad' : 's2m-warn') ?>"><?= h($gw['text']) ?></span></p>
   <p id="st-error" class="s2m-bad"></p>
   <p id="st-dup" class="s2m-bad"></p>
   <button type="button" onclick="act('restart')">Neu starten</button>
@@ -313,7 +334,7 @@ LBWeb::lbheader("Senec2Lox", "", "");
 </div>
 </div>
 
-<div class="s2m-pane" data-tab="logs">
+<div class="s2m-pane" data-tab="logs"<?= $hide('logs') ?>>
 <div class="s2m-status" id="sec-log"><h3>Logdateien</h3>
   <button type="button" onclick="loadLog()">Aktualisieren</button> <span class="hint">aktualisiert sich alle 5 s, solange der Bereich offen ist (letzte 100 Zeilen)</span>
   <pre id="log">-</pre>
@@ -391,25 +412,8 @@ function loadLog(){
     if (atEnd) { pre.scrollTop = pre.scrollHeight; }
   }).catch(function(e){ document.getElementById('log').textContent = 'Log konnte nicht geladen werden: ' + e; });
 }
-var curTab = 'einstellungen';
-function showTab(t){
-  var known = ['einstellungen', 'mqtt', 'loxone', 'test', 'logs'];
-  if (known.indexOf(t) < 0) { t = 'einstellungen'; }
-  curTab = t;
-  document.querySelectorAll('.s2m-pane').forEach(function(p){ p.style.display = (p.getAttribute('data-tab') === t) ? '' : 'none'; });
-  document.querySelectorAll('.s2m-tabs a').forEach(function(a){ a.className = (a.getAttribute('data-tab') === t) ? 'active' : ''; });
-  try { localStorage.setItem('s2m-tab', t); } catch (e) {}
-  if (t === 'logs') { loadLog(); }
-}
-document.querySelectorAll('.s2m-tabs a').forEach(function(a){
-  a.addEventListener('click', function(ev){ ev.preventDefault(); showTab(a.getAttribute('data-tab')); });
-});
+var curTab = <?= json_encode($tab) ?>;   // der Reiter wird vom Server gewählt (Menüleiste, ?tab=...)
 setInterval(function(){ if (!document.hidden && curTab === 'logs') { loadLog(); } }, 5000);
-(function(){
-  var t = (location.hash || '').replace('#', '');
-  if (!t) { try { t = localStorage.getItem('s2m-tab') || ''; } catch (e) {} }
-  showTab(t);
-})();
 // Zustand der Hauptbereiche merken (nur Browser-lokal)
 (function(){
   var secs = document.querySelectorAll('details.s2m-sec');
@@ -419,7 +423,7 @@ setInterval(function(){ if (!document.hidden && curTab === 'logs') { loadLog(); 
     d.addEventListener('toggle', function(){ try { localStorage.setItem(k, d.open ? '1' : '0'); } catch (e) {} });
   });
 })();
-refresh(); loadLog();
+refresh(); if (curTab === 'logs') { loadLog(); }
 // Nur aktualisieren, solange der Tab sichtbar ist (spart Rechenzeit auf kleinen LoxBerrys)
 setInterval(function(){ if (!document.hidden) { refresh(); } }, 5000);
 document.addEventListener('visibilitychange', function(){ if (!document.hidden) { refresh(); } });

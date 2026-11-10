@@ -8,6 +8,31 @@ Release-Ablauf: Version in `senec2lox/plugin.cfg` und `senec2lox/bin/lib/AppVers
 
 ## [Unveröffentlicht]
 
+## [1.3.0] – 2026-11-10
+
+### Neu
+- **Status und Lebenszeichen wie in den anderen Plugins:** `senec/status/ok` (1, wenn aktuelle Live-Werte aus mindestens einer Quelle vorliegen), `senec/status/zaehler` (zählt bei jedem Abfrage-Durchgang, mindestens alle 10 s, 0…999 weiter) und `senec/status/ts` (Unix-Zeit des Durchgangs). Alle drei werden nicht retained gesendet. Bestehende Topics (`senec/online`, `senec/lala/ok` …) bleiben unverändert.
+- Test des Dienstes gegen Fake-Speicher und Fake-Broker (prüft die Status-Topics; wird ohne PHP-Erweiterung curl übersprungen und gemeldet).
+
+## [1.2.0] – 2026-11-10
+
+Anpassung an die Vorgaben aus dem LoxBerry-Entwicklerwiki (und dem LoxBerry-Quellcode). Topics und Konfiguration sind unverändert.
+
+### Hinzugefügt
+- **Healthcheck für die LoxBerry-Healthcheck-Seite** (`bin/healthcheck`, Aufruf mit `title` und `check`): Fehler (Benachrichtigung und E-Mail), wenn der Dienst keine Statusmeldung mehr schreibt; Warnung bei MQTT-Broker weg, Quelle ohne Antwort oder zweiter Instanz; Info bei abgeschaltetem Dienst oder ohne Quelle; sonst OK mit Zahl der Quellen und Live-Quelle.
+- **Prüfung des Gateway-Abos** in den Reitern „Einbindung in Loxone“ und „Test“ (`GatewayInfo`, Kopie aus `common/php`): Gateway V2 liest die Abo-Datei des Plugins nicht, das Abo (`senec/#` bzw. mit eigenem Präfix) muss dort von Hand unter „Abonnements“ eingetragen sein. Die Oberfläche sagt, ob es eingetragen ist und was fehlt.
+- **Abo-Datei `config/mqtt_subscriptions.cfg`** (`senec/#`, eine Zeile je Topic) für das Gateway V1.
+- Tests für Healthcheck und Weboberfläche: Jeder Reiter wird mit Attrappen der LoxBerry-Bibliotheken gerendert (`tests/stubs/`, `tests/ui_page.php`).
+
+### Geändert
+- **Gateway-Abo im Reiter MQTT als farbiges Feld:** grün, sobald mindestens ein passendes Abo im Gateway eingetragen ist (auch wenn nur ein Teil der Topics abonniert ist; dann mit Hinweis), rot nur, wenn keines eingetragen ist. Die eingetragenen Abos werden darunter aufgelistet.
+- **Menüleiste:** Die Reiter nutzen die offizielle Menüleiste von LoxBerry (`$navbar`) statt eigener Reiterknöpfe. Der Server wählt den Reiter (`?tab=…`); alle Bereiche bleiben im Formular, damit Speichern nie Felder anderer Reiter verliert. Ein Reiterwechsel lädt die Seite neu, nicht gespeicherte Eingaben gehen dabei verloren.
+- `CUSTOM_LOGLEVELS=false`: Der Loglevel gilt nur aus den Plugin-Einstellungen (wie in der Oberfläche beschrieben); die Loglevel-Auswahl der LoxBerry-Pluginverwaltung hatte bisher keine Wirkung und entfällt.
+- Beim Gateway-Hinweis im Reiter „Einbindung in Loxone“ steht der Hinweis, dass bei Gateway V2 von Hand abonniert werden muss.
+
+### Entfernt
+- Leeres `preinstall.sh` (verzögerte nur die Installation).
+
 ## [1.1.0] – 2026-11-09
 
 ### Geändert

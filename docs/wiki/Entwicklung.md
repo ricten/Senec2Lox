@@ -5,14 +5,17 @@
 ```
 senec2lox/                  Inhalt des Plugin-ZIP
 ├── plugin.cfg
-├── preinstall.sh postinstall.sh preupgrade.sh postupgrade.sh
+├── postinstall.sh preupgrade.sh postupgrade.sh
 ├── uninstall/uninstall  daemon/daemon  cron/cron.01min
 ├── bin/
 │   ├── senec2lox.php       Hauptdienst (Endlosschleife, Tick 1 s)
+│   ├── healthcheck         LoxBerry-Healthcheck (Dienst, Broker, Quellen)
 │   ├── start.sh stop.sh
 │   └── lib/                 Config, State, Logger, Http, MqttClient, SenecDecode, StateTexts,
-│                            LalaSource, OpenApiSource, ConnectSource, Mapper, Publisher, bootstrap
+│                            LalaSource, OpenApiSource, ConnectSource, Mapper, Publisher, Catalog,
+│                            GatewayInfo (Kopie aus loxberry-plugins/common/php), bootstrap
 ├── config/senec2lox.json   Standardkonfiguration
+├── config/mqtt_subscriptions.cfg   Abo für das Gateway V1 (eine Zeile je Topic; V2 liest sie nicht)
 ├── webfrontend/htmlauth/    index.php, ajax.php
 └── icons/
 tests/                       Unit-Tests und Fake-Server (nicht im ZIP)
@@ -31,7 +34,9 @@ Nur eine Instanz (`flock`), PID-Datei, Beenden per SIGTERM/SIGINT mit `online=0`
 php tests/run.php
 ```
 
-Deckt Dekodierung, Mapper (Vorzeichen, Grid-Logik, Quellenpriorität), Config-Merge, MQTT-Längenkodierung, Request-Aufteilung und TOFU ab.
+Deckt Dekodierung, Mapper (Vorzeichen, Grid-Logik, Quellenpriorität), Config-Merge, MQTT-Längenkodierung, Request-Aufteilung und TOFU ab. Außerdem prüft der Lauf den **Healthcheck** (`bin/healthcheck`, alle Zustände) und rendert **jeden Reiter der Weboberfläche** mit Attrappen der LoxBerry-Bibliotheken (`tests/stubs/`, `tests/ui_page.php`): Das findet Laufzeitfehler und prüft Menüleiste und Gateway-Abo. Das echte Aussehen in LoxBerry (jQuery Mobile) lässt sich so nicht prüfen.
+
+`senec2lox/bin/lib/GatewayInfo.php` ist eine Kopie aus `loxberry-plugins/common/php/GatewayInfo.php` (dort liegen die eigenen Tests: `php common/tests/run.php`). Änderungen zuerst dort machen und die Datei erneut hierher kopieren.
 
 ## Fake-Server und lokaler Lauf
 

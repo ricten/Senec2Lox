@@ -16,7 +16,8 @@ Zuerst: Plugin öffnen → **Status** (Dienst, MQTT, Quellen) und **Log** (letzt
 | Connect: „Subscription-Key ungültig“ | Key im Developer-Portal prüfen; Abfrage ist für 30 min gedrosselt |
 | Connect: Rate-Limit (429) | Intervall erhöhen |
 | `netz_w` bei OpenAPI wirkt falsch | Vorzeichen von `meter.gridPower` ist ungeklärt → lala als Hauptquelle verwenden |
-| Keine Werte in Loxone | MQTT-Gateway-Abonnement `senec/live/#` prüfen, Namen der virtuellen Eingänge (`senec_live_…`) |
+| Keine Werte in Loxone | MQTT-Gateway-Abonnement `senec/live/#` prüfen, Namen der virtuellen Eingänge (`senec_live_…`). **Gateway V2:** Das Abo muss von Hand im MQTT Gateway unter „Abonnements“ stehen (V2 liest die Abo-Datei des Plugins nicht); die Reiter „Einbindung in Loxone“ und „Test“ zeigen, ob es eingetragen ist |
+| Meldung auf der LoxBerry-Healthcheck-Seite | Das Plugin meldet dort Dienst, MQTT-Broker und Quellen (Fehler: Dienst läuft nicht; Warnung: Broker oder Quelle ohne Antwort, zweite Instanz; Info: abgeschaltet oder keine Quelle eingerichtet). Der Text nennt den Grund |
 
 ## MQTT direkt prüfen
 

@@ -5,17 +5,17 @@ Der Dienst erkennt Änderungen selbst (mtime-Prüfung) – ein Neustart ist nich
 
 ## Menü
 
-Die Weboberfläche hat fünf Reiter:
+Die Weboberfläche hat fünf Reiter in der Menüleiste von LoxBerry:
 
 | Reiter | Inhalt |
 |---|---|
 | Einstellungen | Bereiche *Allgemein*, *Lokal (lala.cgi)*, *Lokale OpenAPI*, *SENEC.Connect* (ausklappbar) |
-| MQTT | Broker, Topic-Präfix, retain, Reihenfolge der Live-Quellen |
-| Einbindung in Loxone | Hinweis zum MQTT-Gateway und die Livewerte mit Topic und Eingangsname |
-| Test | Status (Dienst, MQTT, Quellen) und Wartung |
+| MQTT | Gateway-Abo (grün, sobald mindestens ein passendes Abo eingetragen ist; rot nur, wenn keines eingetragen ist; die Abos werden aufgelistet), Broker, Topic-Präfix, retain, Reihenfolge der Live-Quellen |
+| Einbindung in Loxone | Hinweis zum MQTT-Gateway (mit Prüfung, ob das Abo eingetragen ist) und die Livewerte mit Topic und Eingangsname |
+| Test | Status (Dienst, MQTT, Quellen, Gateway-Abo) und Wartung |
 | Logdateien | Log des Dienstes (aktualisiert sich alle 5 s, solange der Reiter offen ist) |
 
-Einstellungen und MQTT liegen im selben Formular; **Speichern** gilt für beide.
+Einstellungen und MQTT liegen im selben Formular; **Speichern** gilt für beide. Ein Wechsel des Reiters lädt die Seite neu: Nicht gespeicherte Eingaben gehen dabei verloren, also vorher speichern.
 
 ## Allgemein
 
