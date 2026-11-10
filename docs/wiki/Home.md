@@ -22,14 +22,14 @@
 
 ## Seiten
 
-1. [Installation](Installation)
-2. [Konfiguration](Konfiguration)
-3. [Datenquellen](Datenquellen)
-4. [OpenAPI-Registrierung](OpenAPI-Registrierung)
-5. [MQTT-Topics](MQTT-Topics)
-6. [Loxone-Anbindung](Loxone-Anbindung)
-7. [Fehlersuche](Fehlersuche)
-8. [Entwicklung](Entwicklung)
+1. [Installation](Installation.md)
+2. [Konfiguration](Konfiguration.md)
+3. [Datenquellen](Datenquellen.md)
+4. [OpenAPI-Registrierung](OpenAPI-Registrierung.md)
+5. [MQTT-Topics](MQTT-Topics.md)
+6. [Loxone-Anbindung](Loxone-Anbindung.md)
+7. [Fehlersuche](Fehlersuche.md)
+8. [Entwicklung](Entwicklung.md)
 
 ## Voraussetzungen
 

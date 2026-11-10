@@ -9,7 +9,7 @@ Zuerst: Plugin öffnen → **Status** (Dienst, MQTT, Quellen) und **Log** (letzt
 | lala: `Verbindung: …` | IP falsch, Speicher nicht erreichbar, V4/P4/E4 (kein lala.cgi → nur SENEC.Connect) |
 | lala: `HTTP …` oder „kein gültiges JSON“ | Antwort abgeschnitten; Intervall nicht zu klein wählen, Sektionen der Vollabfrage reduzieren |
 | Warnung „Fingerprint geändert“ | Zertifikat des Speichers wurde erneuert (z. B. Update). Wird übernommen. Bei Zweifel Netz prüfen; **Fingerprint zurücksetzen** |
-| OpenAPI `unregistered` | Noch nicht registriert → [OpenAPI-Registrierung](OpenAPI-Registrierung) |
+| OpenAPI `unregistered` | Noch nicht registriert → [OpenAPI-Registrierung](OpenAPI-Registrierung.md) |
 | OpenAPI `pending` | Freigabe im Portal fehlt |
 | OpenAPI `rejected` | Token ungültig/widerrufen → im Portal prüfen, ggf. „Token vergessen“ |
 | OpenAPI `unreachable` | Port 4424 geschlossen: V4/P4/E4 oder Firmware < 4.4.0 |

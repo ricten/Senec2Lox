@@ -49,7 +49,7 @@ Buttons: **Verbindung testen** (zeigt `FACTORY`-Daten) und **Fingerprint zurück
 | Sektionen | `battery,meter` | Auswahl aus `battery`, `meter`, `bess`, `bessNameplate`, `evse` |
 | Gerätename | `LoxBerry` | Name des Eintrags im SENEC-Portal |
 
-Siehe [OpenAPI-Registrierung](OpenAPI-Registrierung). Ein bereits vorhandener Token kann unter „Vorhandenen Token eintragen“ übernommen werden (nur wenn noch keiner gespeichert ist).
+Siehe [OpenAPI-Registrierung](OpenAPI-Registrierung.md). Ein bereits vorhandener Token kann unter „Vorhandenen Token eintragen“ übernommen werden (nur wenn noch keiner gespeichert ist).
 
 ## SENEC.Connect
 

@@ -18,7 +18,7 @@ Alle drei Quellen sind für Endkunden **nur lesend**. Das Plugin sendet keine St
 
 ## B – Lokale OpenAPI
 
-- Benötigt Registrierung und Freigabe im Portal: [OpenAPI-Registrierung](OpenAPI-Registrierung).
+- Benötigt Registrierung und Freigabe im Portal: [OpenAPI-Registrierung](OpenAPI-Registrierung.md).
 - Liefert inhaltlich nichts, was lala.cgi nicht auch liefert, bringt aber `pv_ueberschuss_w` (`powerSurplus`).
 - `meter.gridPower` hat ein ungeklärtes Vorzeichen; das Plugin leitet die Richtung aus der Energiebilanz ab (**⚠ am eigenen Gerät bei Einspeisung prüfen**).
 - `battery.state` wird bewusst **nicht** übersetzt (Bedeutung unbekannt).
@@ -43,4 +43,4 @@ Alle drei Quellen sind für Endkunden **nur lesend**. Das Plugin sendet keine St
 `senec/live/*` wird aus der **ersten Quelle** laut „Reihenfolge Live-Quellen“ gespeist, deren letzter erfolgreicher Abruf **jünger als 3 × ihr Intervall** ist.
 Fällt sie aus, übernimmt die nächste; sobald sie zurück ist, wechselt das Plugin wieder. Die aktive Quelle steht in `senec/live/quelle`.
 
-Welche Werte welche Quelle liefert, zeigt die Tabelle unter [MQTT-Topics](MQTT-Topics).
+Welche Werte welche Quelle liefert, zeigt die Tabelle unter [MQTT-Topics](MQTT-Topics.md).

@@ -37,4 +37,4 @@ Neue Konfigurationsschlüssel ergänzt der Dienst beim Laden automatisch mit Sta
 ## Deinstallation
 
 Plugin in der Plugin-Verwaltung entfernen. Der Dienst wird beendet, `/dev/shm/senec2lox` gelöscht.
-**Wichtig:** Einen registrierten OpenAPI-Eintrag im SENEC-Portal bitte selbst entfernen (siehe [OpenAPI-Registrierung](OpenAPI-Registrierung)).
+**Wichtig:** Einen registrierten OpenAPI-Eintrag im SENEC-Portal bitte selbst entfernen (siehe [OpenAPI-Registrierung](OpenAPI-Registrierung.md)).
