@@ -4,7 +4,7 @@
 
 ^ Autor | Rico Tengler |
 ^ Logo | {{:plugins:senec2lox:senec2lox.png?64|Senec2Lox}} |
-^ Status | STABLE |
+^ Status | BETA |
 ^ Version | 1.4.0 |
 ^ Min. LB Version | 4.0 (benötigt PHP 8.4) |
 ^ Release Download | [[https://github.com/ricten/Senec2Lox/releases/latest|GitHub Releases (aktuelle Version)]] \\ [[https://github.com/ricten/Senec2Lox/releases/download/v1.4.0/senec2lox-1.4.0.zip|senec2lox-1.4.0.zip]] |

@@ -9,7 +9,7 @@ Konfiguration, Referenz, Miniserver-Anbindung, FAQ, Changelog).
 - `FORUM-LINK-EINTRAGEN` (zweimal): Link zum Forenbeitrag des Plugins.
 - Bild `plugins:senec2lox:senec2lox.png`: Datei `docs/logo/senec2lox.png` im Medien-Manager des Wikis hochladen
   (Namensraum `plugins:senec2lox`).
-- Das Feld **Status** („STABLE“) und **Min. LB Version** („4.0“) prüfen. Die Version steht in `senec2lox/plugin.cfg`.
+- Das Feld **Status** („BETA“) und **Min. LB Version** („4.0“) prüfen. Die Version steht in `senec2lox/plugin.cfg`.
 - Bei jedem Release die Felder **Version** und **Release Download** sowie die Changelog-Tabelle aktualisieren.
 - Screenshots (z. B. Status, Lokal (lala.cgi), OpenAPI) lassen sich als `{{:plugins:senec2lox:name.png?600|Text}}` einfügen.
 
