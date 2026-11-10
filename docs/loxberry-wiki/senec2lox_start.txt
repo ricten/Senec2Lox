@@ -12,7 +12,7 @@
 ^ Quellcode | [[https://github.com/ricten/Senec2Lox|github.com/ricten/Senec2Lox]] (MIT-Lizenz) |
 ^ Beschreibung | Liest einen SENEC-Stromspeicher aus (lokal per ''lala.cgi'', per lokaler SENEC OpenAPI oder über die SENEC.Connect-Cloud) und veröffentlicht die Werte per MQTT. Über das LoxBerry-MQTT-Gateway gelangen sie an den Loxone Miniserver. |
 ^ Sprachen | DE |
-^ Diskussion | FORUM-LINK-EINTRAGEN |
+^ Diskussion | https://www.loxforum.com/forum/projektforen/loxberry/plugins/494787-loxberry-plugin-senec2lox-%E2%80%93-senec-stromspeicher-per-mqtt-an-den-miniserver |
 
 ----
 
@@ -311,7 +311,7 @@ Zuerst: Plugin öffnen und **Status** und **Log** ansehen. Für mehr Details den
 | Werte in Loxone fehlen | Abonnement ''senec/live/#'' im MQTT-Gateway und Namen der virtuellen Eingänge (''senec_live_...'') prüfen |
 | Status „nicht konfiguriert“ | Keine IP bzw. kein Key eingetragen (es gibt keine Standard-IP) |
 
-**Fehlerberichte** bitte mit Version, SENEC-Systemtyp, aktiven Quellen und den relevanten Logzeilen im [[FORUM-LINK-EINTRAGEN|Forum]] oder als [[https://github.com/ricten/Senec2Lox/issues|GitHub-Issue]] posten. Vorher Keys, Tokens und Passwörter prüfen; das Plugin maskiert sie im Log.
+**Fehlerberichte** bitte mit Version, SENEC-Systemtyp, aktiven Quellen und den relevanten Logzeilen im [[https://www.loxforum.com/forum/projektforen/loxberry/plugins/494787-loxberry-plugin-senec2lox-%E2%80%93-senec-stromspeicher-per-mqtt-an-den-miniserver|Forum]] oder als [[https://github.com/ricten/Senec2Lox/issues|GitHub-Issue]] posten. Vorher Keys, Tokens und Passwörter prüfen; das Plugin maskiert sie im Log.
 
 ----
 

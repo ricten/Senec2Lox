@@ -6,7 +6,7 @@ Konfiguration, Referenz, Miniserver-Anbindung, FAQ, Changelog).
 
 ## Vor dem Einstellen anpassen
 
-- `FORUM-LINK-EINTRAGEN` (zweimal): Link zum Forenbeitrag des Plugins.
+- Der Link zum Forenbeitrag steht schon in der Zeile „Diskussion“ der Plugin-Daten (bei einem neuen Beitrag dort anpassen).
 - Bild `plugins:senec2lox:senec2lox.png`: Datei `docs/logo/senec2lox.png` im Medien-Manager des Wikis hochladen
   (Namensraum `plugins:senec2lox`).
 - Das Feld **Status** („BETA“) und **Min. LB Version** („4.0“) prüfen. Die Version steht in `senec2lox/plugin.cfg`.
