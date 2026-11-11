@@ -6,8 +6,8 @@
 ^ Logo | {{:plugins:senec2lox:senec2lox.png?64|Senec2Lox}} |
 ^ Status | BETA |
 ^ Version | 1.4.1 |
-^ Min. LB Version | 4.0 (benötigt PHP 8.2 oder neuer) |
-^ Release Download | [[https://github.com/ricten/Senec2Lox/releases/latest|GitHub Releases (aktuelle Version)]] \\ [[https://github.com/ricten/Senec2Lox/releases/download/v1.4.1/senec2lox-1.4.1.zip|senec2lox-1.4.1.zip]] |
+^ Min. LB Version | 4.0.0.0 |
+^ Release Download | https://github.com/ricten/Senec2Lox/releases/latest/download/senec2lox.zip |
 ^ Pre-Release Download | - |
 ^ Quellcode | [[https://github.com/ricten/Senec2Lox|github.com/ricten/Senec2Lox]] (MIT-Lizenz) |
 ^ Beschreibung | Liest einen SENEC-Stromspeicher aus (lokal per ''lala.cgi'', per lokaler SENEC OpenAPI oder über die SENEC.Connect-Cloud) und veröffentlicht die Werte per MQTT. Über das LoxBerry-MQTT-Gateway gelangen sie an den Loxone Miniserver. |
