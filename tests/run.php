@@ -332,7 +332,7 @@ foreach ([[7, 'debug'], [6, 'info'], [5, 'info'], [4, 'warn'], [3, 'error'], [1,
 }
 [$o] = $uiPage('einstellungen');
 check('UI: keine eigene Loglevel-Auswahl mehr, Hinweis auf die Plugin-Verwaltung', !str_contains($o, 'name="log_level"') && str_contains($o, 'LoxBerry-Plugin-Verwaltung eingestellt'), true);
-check('kein leeres preinstall.sh', is_file($root . '/senec2lox/preinstall.sh'), false);
+check('preinstall.sh ist nicht leer, sondern prueft PHP 8.2', is_file($root . '/senec2lox/preinstall.sh') && str_contains((string)file_get_contents($root . '/senec2lox/preinstall.sh'), 'PHP_VERSION_ID'), true);
 
 // --- Dienst gegen Fake-Speicher (lala.cgi) und Fake-Broker: Status und Lebenszeichen ---
 // Der Dienst braucht die PHP-Erweiterung curl (auf dem LoxBerry vorhanden). Lokal ohne curl wird der Test uebersprungen und gemeldet.
