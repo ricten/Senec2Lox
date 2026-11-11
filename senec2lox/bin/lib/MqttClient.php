@@ -1,10 +1,16 @@
 <?php
 /**
- * Minimaler MQTT-3.1.1-Client (QoS 0, dauerhafte Verbindung).
+ * Minimaler MQTT-3.1.1-Client (QoS 0, dauerhafte Verbindung, Abos).
  *
  * Der Socket ist nicht blockierend. Schreibzugriffe warten bei vollem Sendepuffer per stream_select auf
  * Schreibbarkeit (PHP >= 7.4 liefert dann fwrite() = false bzw. 0, das ist kein Verbindungsabbruch).
  * Ein Abbruch wird nur gemeldet, wenn der Broker die Verbindung schliesst oder nicht mehr liest.
+ * Eingehende PUBLISH-Pakete (nicht retained) landen in einer Warteschlange: takeMessages().
+ * Abos werden nach jedem Verbinden automatisch erneuert.
+ *
+ * Optional TLS (fuer Geraete mit eigenem Broker und selbstsigniertem Zertifikat, z. B. Bambu-Lab-Drucker): Parameter $tls.
+ * Dann wird das Zertifikat bewusst NICHT geprueft (selbstsigniert, Geraet im Heimnetz). Ohne $tls aendert sich nichts.
+ * Ein leerer $willTopic sendet keinen Letzten Willen (der Drucker-Broker braucht keinen).
  */
 final class MqttClient
 {
@@ -16,6 +22,11 @@ final class MqttClient
     private int $connectedAt = 0;
     private int $closedAt = 0;
     private string $lastError = '';
+    private string $rx = '';
+    private array $queue = [];
+    private array $subs = [];
+    private int $packetId = 0;
+    private bool $acceptRetained = false;
 
     public function __construct(
         private readonly string $host,
@@ -25,6 +36,8 @@ final class MqttClient
         private readonly string $clientId,
         private readonly string $willTopic,
         private readonly int $keepalive = 60,
+        private readonly bool $tls = false,
+        private readonly int $connectTimeout = 5,
     ) {
     }
 
@@ -66,6 +79,39 @@ final class MqttClient
         return ($this->closedAt ?: time()) - $this->connectedAt;
     }
 
+    /** Topic-Filter abonnieren (wird bei jedem Verbinden erneuert). */
+    public function subscribe(string $filter): void
+    {
+        $this->subs[$filter] = true;
+        if ($this->sock) {
+            $this->sendSubscribe($filter);
+        }
+    }
+
+    /**
+     * Retained Nachrichten ebenfalls annehmen (Standard: ignorieren, damit alte Befehle nicht erneut laufen).
+     * Sinnvoll fuer reine Messwert-Abos, z. B. wenn die Quelle nur bei Aenderung sendet.
+     */
+    public function acceptRetained(bool $accept = true): void
+    {
+        $this->acceptRetained = $accept;
+    }
+
+    /** Eingegangene Nachrichten abholen: Liste von [topic, payload]. */
+    public function takeMessages(): array
+    {
+        $q = $this->queue;
+        $this->queue = [];
+        return $q;
+    }
+
+    private function sendSubscribe(string $filter): bool
+    {
+        $this->packetId = ($this->packetId % 65535) + 1;
+        $body = pack('n', $this->packetId) . self::str($filter) . chr(0);
+        return $this->write(chr(0x82) . self::len(strlen($body)) . $body);
+    }
+
     /** Verbindung beenden und den Grund merken. */
     private function fail(string $reason): bool
     {
@@ -78,13 +124,20 @@ final class MqttClient
     {
         $this->lastError = '';
         $this->closedAt = 0;
-        $this->sock = @stream_socket_client("tcp://{$this->host}:{$this->port}", $e, $es, 5) ?: null;
+        $this->rx = '';
+        $this->queue = [];
+        if ($this->tls) {
+            $ctx = stream_context_create(['ssl' => ['verify_peer' => false, 'verify_peer_name' => false, 'allow_self_signed' => true]]);
+            $this->sock = @stream_socket_client("ssl://{$this->host}:{$this->port}", $e, $es, $this->connectTimeout, STREAM_CLIENT_CONNECT, $ctx) ?: null;
+        } else {
+            $this->sock = @stream_socket_client("tcp://{$this->host}:{$this->port}", $e, $es, $this->connectTimeout) ?: null;
+        }
         if (!$this->sock) {
             $this->lastError = "TCP-Verbindung zu {$this->host}:{$this->port} fehlgeschlagen ($e $es)";
             return false;
         }
         stream_set_timeout($this->sock, 5);
-        $flags = 0x02 | 0x04 | 0x20; // clean session, will, will retain
+        $flags = $this->willTopic !== '' ? (0x02 | 0x04 | 0x20) : 0x02; // clean session, will, will retain (ohne Will nur clean session)
         if ($this->user !== '') {
             $flags |= 0x80;
         }
@@ -92,7 +145,7 @@ final class MqttClient
             $flags |= 0x40;
         }
         $body = self::str('MQTT') . chr(4) . chr($flags) . pack('n', $this->keepalive)
-            . self::str($this->clientId) . self::str($this->willTopic) . self::str('0');
+            . self::str($this->clientId) . ($this->willTopic !== '' ? self::str($this->willTopic) . self::str('0') : '');
         if ($this->user !== '') {
             $body .= self::str($this->user);
         }
@@ -126,17 +179,28 @@ final class MqttClient
         stream_set_blocking($this->sock, false);
         $this->connectedAt = time();
         $this->lastSend = time();
+        foreach (array_keys($this->subs) as $filter) {
+            if (!$this->sendSubscribe((string)$filter)) {
+                return false;
+            }
+        }
         return true;
     }
 
-    public function publish(string $topic, string $payload, bool $retain): bool
+    /** $qos 1: mit Paket-ID gesendet; das PUBACK des Brokers wird nicht ausgewertet (genuegt fuer "mindestens einmal"). */
+    public function publish(string $topic, string $payload, bool $retain = false, int $qos = 0): bool
     {
+        if ($qos > 0) {
+            $this->packetId = ($this->packetId % 65535) + 1;
+            $body = self::str($topic) . pack('n', $this->packetId) . $payload;
+            return $this->write(chr(0x32 | ($retain ? 1 : 0)) . self::len(strlen($body)) . $body);
+        }
         $body = self::str($topic) . $payload;
         return $this->write(chr(0x30 | ($retain ? 1 : 0)) . self::len(strlen($body)) . $body);
     }
 
     /**
-     * Regelmaessig aufrufen (auch waehrend langer Abfragen): eingehende Pakete verwerfen,
+     * Regelmaessig aufrufen (auch waehrend langer Abfragen): eingehende Pakete lesen,
      * Verbindungsabbruch erkennen, Keepalive (PINGREQ) senden.
      */
     public function loop(): bool
@@ -147,18 +211,63 @@ final class MqttClient
         for ($i = 0; $i < 50; $i++) {
             $r = [$this->sock];
             $w = $x = null;
-            if (@stream_select($r, $w, $x, 0) < 1) {
+            $sel = @stream_select($r, $w, $x, 0);
+            if ($sel < 1 && !$this->tls) {
                 break;
             }
-            $d = @fread($this->sock, 4096);
-            if ($d === '' || $d === false) { // lesbar, aber leer = Broker hat geschlossen
+            // Bei TLS kann OpenSSL schon entschluesselte Daten halten, die stream_select nicht sieht: immer lesen versuchen
+            $d = @fread($this->sock, 65536);
+            if ($this->tls) {
+                if ($d === false || ($d === '' && feof($this->sock))) {
+                    return $this->fail('Broker hat die Verbindung geschlossen');
+                }
+                if ($d === '') {
+                    break;              // nichts da (nicht blockierend)
+                }
+            } elseif ($d === '' || $d === false) { // lesbar, aber leer = Broker hat geschlossen
                 return $this->fail('Broker hat die Verbindung geschlossen');
             }
+            $this->rx .= $d;
+            $this->parse();
         }
         if (time() - $this->lastSend >= max(5, intdiv($this->keepalive, 3))) {
             return $this->write(chr(0xC0) . chr(0));
         }
         return true;
+    }
+
+    /** Vollstaendige Pakete aus dem Empfangspuffer verarbeiten. */
+    private function parse(): void
+    {
+        while (strlen($this->rx) >= 2) {
+            $mul = 1;
+            $rem = 0;
+            $i = 1;
+            do {
+                if ($i >= strlen($this->rx)) {
+                    return;             // Laengenfeld noch unvollstaendig
+                }
+                $b = ord($this->rx[$i++]);
+                $rem += ($b & 127) * $mul;
+                $mul *= 128;
+            } while ($b & 128 && $i < 5);
+            if (strlen($this->rx) < $i + $rem) {
+                return;                 // Paket noch unvollstaendig
+            }
+            $first = ord($this->rx[0]);
+            $body = substr($this->rx, $i, $rem);
+            $this->rx = substr($this->rx, $i + $rem);
+            if (($first >> 4) !== 3 || strlen($body) < 2) {
+                continue;               // SUBACK, PINGRESP ... werden nicht gebraucht
+            }
+            $tl = (ord($body[0]) << 8) | ord($body[1]);
+            $topic = substr($body, 2, $tl);
+            $off = 2 + $tl + ((($first >> 1) & 3) > 0 ? 2 : 0);   // QoS>0: Paket-ID ueberspringen
+            if (($first & 1) && !$this->acceptRetained) {
+                continue;               // retained Nachrichten ignorieren (alte Befehle nicht erneut ausfuehren)
+            }
+            $this->queue[] = [$topic, (string)substr($body, $off)];
+        }
     }
 
     private function write(string $data): bool

@@ -96,7 +96,57 @@ final class LalaSource
                 $out[$s] = [];
             }
         }
+        foreach ($this->cfg['_extra_sections'] ?? [] as $s) {      // z. B. SOCKETS und WALLBOX, solange die Steuerung dafuer freigegeben ist
+            $out[$s] = [];
+        }
         return $out;
+    }
+
+    /** Letzter abgefragter Wert [SEKTION][KEY] (oder null). */
+    public function wert(string $sec, string $key): mixed
+    {
+        return $this->values[$sec][$key] ?? null;
+    }
+
+    /**
+     * Anfrage mit Schreibzugriff (Steuerbefehl) an lala.cgi; die Antwort enthaelt die abgefragten bzw. gesetzten Schluessel.
+     * @return array{ok:bool,error:?string,raw:array,data:array}  raw: Rohwerte der Antwort, data: decodierte Werte [SEKTION][KEY]
+     */
+    public function senden(string $body): array
+    {
+        if (strlen($body) >= self::MAX_BODY) {
+            return ['ok' => false, 'error' => 'Anfrage zu gross', 'raw' => [], 'data' => []];
+        }
+        $r = $this->post($body);
+        if ($r['errno'] !== 0) {
+            return ['ok' => false, 'error' => 'Keine Verbindung zum Speicher: ' . $r['error'], 'raw' => [], 'data' => []];
+        }
+        if ($r['status'] !== 200) {
+            return ['ok' => false, 'error' => 'Der Speicher antwortet mit HTTP ' . $r['status'], 'raw' => [], 'data' => []];
+        }
+        $raw = json_decode($r['body'], true);
+        if (!is_array($raw)) {
+            return ['ok' => false, 'error' => 'Unverstaendliche Antwort des Speichers', 'raw' => [], 'data' => []];
+        }
+        $data = [];
+        foreach ($raw as $sec => $keys) {
+            foreach ((array)$keys as $key => $v) {
+                if (!is_string($v) || !SenecDecode::isAbsent($v)) {
+                    $d = SenecDecode::value($v);
+                    if ($d !== null) {
+                        $data[$sec][$key] = $d;
+                    }
+                }
+            }
+        }
+        return ['ok' => true, 'error' => null, 'raw' => $raw, 'data' => $data];
+    }
+
+    /** Einzelne Schluessel lesen (kein Schreibzugriff). @return array|null decodierte Werte [KEY] oder null bei Fehler */
+    public function lesen(string $sec, array $keys): ?array
+    {
+        $r = $this->senden(json_encode([$sec => array_fill_keys($keys, '')]));
+        return $r['ok'] ? ($r['data'][$sec] ?? []) : null;
     }
 
     private function post(string $body): array

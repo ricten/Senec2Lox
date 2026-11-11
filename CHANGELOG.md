@@ -6,6 +6,19 @@ Versionierung nach [Semantic Versioning](https://semver.org/lang/de/) (`MAJOR.MI
 Release-Ablauf: Version in `senec2lox/plugin.cfg` und `senec2lox/bin/lib/AppVersion.php` erhöhen, hier einen Eintrag ergänzen,
 `bash build.sh` ausführen (prüft die Übereinstimmung), danach Git-Tag `vX.Y.Z` setzen.
 
+## [1.5.0] - 2026-11-12
+
+### Neu
+- **Steuerung per MQTT (Befehle aus Loxone), ab Werk gesperrt.** Erst den Warnhinweis bestätigen (Reiter Einstellungen → Steuerung), dann die Gruppen einzeln freigeben. Befehle gehen nur über die lokale Quelle (`lala.cgi`), dieselben Anfragen wie im ioBroker-Adapter. Jeder Befehl wird quittiert (`angenommen`, dann `ausgefuehrt` oder `abgelehnt: <Grund>`), höchstens ein Befehl alle 2 Sekunden.
+  - `senec/befehl/zwangsladung` (1/0): Zwangsladung der Batterie an/aus; der Zustand steht in `senec/live/zwangsladung` (Status 8 und 9).
+  - `senec/befehl/steckdose<N>/<feld>`: schaltbare Steckdosen: `modus` (aus, automatik, dauer_ein), `einschaltschwelle_w`, `abschaltschwelle_w`, `ueberschuss_min`, `einschaltdauer_min`, `stunde`, `minute`. Nach dem Schreiben liest das Plugin zurück und quittiert nur, was der Speicher übernommen hat.
+  - `senec/befehl/wallbox<N>/<feld>`: Wallbox: `ladestrom_max_a`, `ladestrom_standard_a`, `ladestrom_min_a` (6 bis 32 A), `smart_laden`, `zwischenladen`.
+  - Für freigegebene Steckdosen und Wallbox liest das Plugin zusätzlich die Abschnitte `SOCKETS` und `WALLBOX`, damit ihre Einstellungen als Rohwerte in Loxone ankommen.
+- Geprüft: Die Zwangsladung wurde an einem echten Speicher ein- und wieder ausgeschaltet (Status 8 und zurück, Zwangsladung und Ladesperre standen danach wieder auf 0). Die Steckdosen wurden am echten Speicher mit Schwellen, Zeiten und den Modi aus, automatik und dauer_ein (je etwa 10 Sekunden) geprüft, mit Zurücklesen, danach wieder im Ausgangszustand; beim Einschalten kann der Speicher kurz langsam antworten. Die Wallbox wurde am echten Speicher mit Smart-Laden, Zwischenladen, kleinstem und höchstem Ladestrom geprüft (mit Zurücklesen, danach wieder im Ausgangszustand): Den höchsten Ladestrom übernimmt der Speicher erst nach etwa 8 Sekunden, das Plugin wartet bis zu 16 Sekunden auf die Bestätigung; der Standard-Ladestrom ließ sich mit 15 A statt 16 A nicht ändern (der Speicher behielt 16 A, Quittung: abgelehnt).
+- Mehrere Wallboxen: Der Speicher unterstützt bis zu vier. Zusätzlich zu `wallbox_w`, `wallbox_fahrzeug_verbunden` und `wallbox_status_code` (erste Wallbox) gibt es je eingerichteter Wallbox `wallbox1_w` … `wallbox4_w`, `wallbox<N>_fahrzeug_verbunden` und `wallbox<N>_status_code`; die Befehle `wallbox<N>/…` gelten für 1 bis 4.
+- Nicht dabei: Reboot des Speichers sowie Notstromreserve, Peak-Shaving und SG-Ready (gibt es nur über mein-senec.de mit Konto-Anmeldung).
+- MQTT-Client kann Nachrichten empfangen (Abo `<Präfix>/befehl/#`); Test-Attrappe des Speichers kann schreiben, Test-Broker kann Nachrichten einspielen.
+
 ## [1.4.2] - 2026-11-11
 
 ### Geändert

@@ -77,6 +77,10 @@ Den Key erhalten Sie auf <https://developer.senec.com> (anmelden → Produkt abo
 | Rohwerte veröffentlichen | an | `raw/…`, `openapi/…`, `connect/…` |
 | Reihenfolge Live-Quellen | `lala,openapi,connect` | Erste aktuelle Quelle speist `senec/live/*` |
 
+## Steuerung (Reiter „Einstellungen“)
+
+Ab Werk alles gesperrt. Erst „Ich habe den Warnhinweis gelesen …“ anhaken, dann die Gruppen **Zwangsladung**, **Schaltbare Steckdosen** und **Wallbox** einzeln freigeben und speichern. Die Befehle und Werte stehen in der [Loxone-Anbindung](Loxone-Anbindung.md). Ohne bestätigten Warnhinweis bleibt alles gesperrt, auch wenn Gruppen angehakt sind. In der Konfigurationsdatei: `control` mit `warnung_ok`, `zwangsladung`, `steckdosen`, `wallbox` (je true/false).
+
 ## Beispiel `senec2lox.json`
 
 ```json

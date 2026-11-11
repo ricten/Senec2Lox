@@ -20,7 +20,7 @@ Bei Widerspruch gilt die Spezifikation. Stellen mit „⚠ prüfen“ nicht als 
 - Dateien mit LF-Zeilenenden (Shell-Skripte!). `.gitattributes`/`.editorconfig` beachten.
 - Keine Secrets (Subscription-Key, OpenAPI-Token, MQTT-Passwort) loggen oder im Klartext in der Oberfläche anzeigen.
 - OpenAPI `POST /v1/register` **nur** auf Knopfdruck in der Weboberfläche, nie in der Poll-Schleife; nie automatisch neu registrieren.
-- Nur lesende Zugriffe auf SENEC; keine Steuerbefehle (Zwangsladung ist „Später“).
+- Schreibzugriffe auf SENEC nur als Steuerbefehle aus MQTT (`Control.php`): ab Werk gesperrt, erst nach bestätigtem Warnhinweis und je Gruppe freigegeben (Zwangsladung, Steckdosen, Wallbox), nur lokal über `lala.cgi`, mit Quittung, höchstens ein Befehl alle 2 Sekunden, Werte streng geprüft. Nie Reboot, nie Konfiguration der Anlage. Notstromreserve, Peak-Shaving und SG-Ready laufen nur über mein-senec.de (Konto-Anmeldung) und sind nicht eingebaut. Echte Hardware nur mit ausdrücklicher Freigabe von Rico je Funktion ausprobieren. Stand 2026-11-12: am echten Speicher geprüft sind Zwangsladung (an, aus, Zustand folgt, Flags danach 0) und Steckdosen (Schwellen, Zeiten, Modus aus, automatik und dauer_ein für 10 s, Zurücklesen, wiederhergestellt); die Wallbox (Smart-Laden, Zwischenladen, Ladestrom min und max; der höchste Ladestrom braucht etwa 8 s bis zur Übernahme, der Standard-Ladestrom ließ sich mit 15 A nicht setzen, Quittung dann abgelehnt).
 - `lala.cgi`-Request-Body < 11 500 Byte. `STATISTIC` nie abfragen.
 - Konfig atomar schreiben (Temp + rename). Token/Fingerprints nur in `state.json` (data-Verzeichnis).
 - StateTexts basiert auf ioBroker.senec (MIT, © NoBl) – Copyright-Hinweis behalten.

@@ -11,7 +11,7 @@
 - „Sprechende“ Topics wie `senec/live/pv_w`, `senec/live/netz_w`, `senec/live/batterie_soc`
 - Automatische Umschaltung auf die nächste Quelle, wenn die bevorzugte ausfällt
 - Konfigurationsänderungen ohne Neustart, Autostart nach Reboot, Watchdog
-- Nur **lesender** Zugriff auf den Speicher – keine Steuerung
+- Standardmäßig nur **lesender** Zugriff auf den Speicher. **Steuerung** (Zwangsladung, Steckdosen, Wallbox) per MQTT-Befehl aus Loxone gibt es optional, ab Werk gesperrt (siehe [Loxone-Anbindung](Loxone-Anbindung.md))
 
 ## Welche Quelle für welches System?
 

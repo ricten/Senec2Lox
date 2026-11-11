@@ -74,7 +74,7 @@ Erzeugt `docs/logo/senec2lox.svg|png` (grüner LoxBerry-Stil mit SENEC-Schriftzu
 - Keine hartkodierten `/opt/loxberry`-Pfade (PHP: `loxberry_system.php`, Shell: `REPLACELBPBINDIR` usw.).
 - LF-Zeilenenden.
 - Keine Secrets loggen.
-- Keine Steuerbefehle an den Speicher.
+- Steuerbefehle nur aus MQTT, ab Werk gesperrt, mit Warnhinweis, lokal über lala.cgi (siehe `CLAUDE.md`).
 - Registrierung der OpenAPI nur auf Knopfdruck.
 
 Ausführliche Spezifikation: `SENEC-LoxBerry-Plugin-Spezifikation.md` im Projektordner.

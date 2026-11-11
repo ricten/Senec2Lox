@@ -91,6 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['do'] ?? '') === 'save') {
             'system_filter' => $p('connect_filter'), 'interval' => (int)$p('connect_interval', '300'),
             'timeout' => (int)$p('connect_timeout', '30'), 'include' => implode(',', (array)($_POST['connect_include'] ?? []))];
         $n['live_source_priority'] = $p('live_source_priority', 'lala,openapi,connect');
+        $n['control'] = ['warnung_ok' => $b('ctl_warnung'), 'zwangsladung' => $b('ctl_zwangsladung'), 'steckdosen' => $b('ctl_steckdosen'), 'wallbox' => $b('ctl_wallbox')];
         $pass = $p('mqtt_pass');
         $n['mqtt'] = ['use_loxberry_broker' => $b('mqtt_lb'), 'host' => $p('mqtt_host'), 'port' => (int)$p('mqtt_port', '1883'),
             'user' => $p('mqtt_user'), 'pass' => $pass !== '' ? $pass : $s2mcfg['mqtt']['pass'],
@@ -128,6 +129,7 @@ foreach ($tabs as $k => $t) {
 // Kommt das Abo beim Gateway an? (Gateway V2 liest die Abo-Datei des Plugins nicht)
 $aboFilter = $s2mcfg['mqtt']['topic_prefix'] . '/#';
 $gw = GatewayInfo::subscription($aboFilter, GatewayInfo::general());
+$udp = GatewayInfo::udpPort(function_exists('mqtt_connectiondetails') ? mqtt_connectiondetails() : null, GatewayInfo::general());   // UDP-Port des Gateways fuer Befehle aus Loxone
 
 // 4. Parameter true: kein jQuery Mobile, LoxBerry Design System (lb-* Klassen)
 LBWeb::lbheader("Senec2Lox", "", "", true);
@@ -294,6 +296,18 @@ LBWeb::lbheader("Senec2Lox", "", "", true);
   <p class="hint">Key: <a href="https://developer.senec.com/instructions" target="_blank" rel="noopener">developer.senec.com</a> &rarr; Produkte abonnieren &rarr; Profil &rarr; Meine Abonnements.</p>
 </div></details>
 
+<details class="lb-collapsible s2m-sec"><summary>Steuerung (Befehle aus Loxone)</summary><div class="lb-collapsible-content">
+  <div class="lb-callout lb-callout-warning"><b>Nur auf eigene Gefahr.</b> Diese Befehle ändern Einstellungen an Ihrem SENEC-Speicher über die lokale, nicht dokumentierte Schnittstelle <code>lala.cgi</code>
+    (dieselbe, die der ioBroker-Adapter nutzt). SENEC unterstützt das nicht; falsche Werte können den Betrieb stören. Es gibt keinen Schutz vor widersprüchlichen Befehlen aus mehreren Quellen
+    (Loxone, App, mein-senec.de). Die Befehle sind ab Werk gesperrt. Geprüft sind an einem echten Speicher die Zwangsladung und die Steckdosen (auch dauer_ein, kurz); auch die Wallbox wurde am echten Speicher geprüft (der Speicher übernimmt Ladeströme erst nach einigen Sekunden; der Standard-Ladestrom ließ sich nicht ändern). Notstromreserve, Peak-Shaving und SG-Ready gibt es nur über mein-senec.de und sind nicht enthalten.</div>
+  <?= ftog('ctl_warnung', !empty($s2mcfg['control']['warnung_ok']), 'Ich habe den Warnhinweis gelesen und möchte Steuerbefehle zulassen') ?>
+  <?= ftog('ctl_zwangsladung', !empty($s2mcfg['control']['zwangsladung']), 'Zwangsladung der Batterie an/aus') ?>
+  <?= ftog('ctl_steckdosen', !empty($s2mcfg['control']['steckdosen']), 'Schaltbare Steckdosen (Modus, Schwellen, Zeiten)') ?>
+  <?= ftog('ctl_wallbox', !empty($s2mcfg['control']['wallbox']), 'Wallbox (Ladeströme, Smart-Laden, Zwischenladen)') ?>
+  <p class="hint">Ohne bestätigten Warnhinweis bleibt alles gesperrt, auch wenn eine Gruppe angehakt ist. Befehle gehen nur über die lokale Quelle (lala.cgi). Für Steckdosen und Wallbox liest das Plugin zusätzlich die Abschnitte SOCKETS und WALLBOX,
+    damit ihre Einstellungen als Rohwerte in Loxone ankommen. Die Befehls-Topics stehen im Reiter „Einbindung in Loxone“.</p>
+</div></details>
+
 <button type="submit" class="lb-btn lb-btn-primary">Speichern</button>
 </div>
 
@@ -325,6 +339,27 @@ LBWeb::lbheader("Senec2Lox", "", "", true);
   <p>Gateway-Abo:</p>
   <?= GatewayInfo::feldHtml($gw, $aboFilter) ?>
   <p class="hint">Beim Gateway V2 muss das Abo von Hand im MQTT Gateway unter „Abonnements“ eingetragen werden; die Abo-Datei des Plugins liest nur das Gateway V1. Ändert man den Topic-Präfix, muss das Abo angepasst werden.</p>
+</div>
+<div class="lb-card"><h3>Befehle aus Loxone (Steuerung)</h3>
+  <p>Ab Werk gesperrt (Reiter „Einstellungen“ → Steuerung): erst Warnhinweis bestätigen, dann die Gruppe freigeben.
+     Virtueller Ausgang: Adresse <code>/dev/udp/&lt;LoxBerry-IP&gt;/<?= (int)$udp ?></code>, Befehl bei EIN
+     <code>publish <?= h($s2mcfg['mqtt']['topic_prefix']) ?>/befehl/&lt;befehl&gt; &lt;wert&gt;</code> (ohne HTTP-Header/Body). Die Quittung steht unter <code>&lt;topic&gt;/quittung</code>:
+     <code>angenommen</code>, dann <code>ausgefuehrt</code> oder <code>abgelehnt: &lt;grund&gt;</code> (nie retained). Höchstens ein Befehl alle <?= (int)Control::MIN_ABSTAND ?> Sekunden.</p>
+  <p>Freigegeben:
+  <?php foreach (Control::GRUPPEN as $gk => $gt) { echo h($gt) . ': ' . (Control::wirdFrei($s2mcfg, $gk) ? '<span class="s2m-ok">ja</span>' : '<span class="s2m-bad">nein</span>') . ' &nbsp; '; } ?></p>
+  <div class="lb-table-scroll"><table class="lb-table"><tr><th>Topic</th><th>Wert</th><th>Wirkung</th></tr>
+  <?php
+  $pf = $s2mcfg['mqtt']['topic_prefix'] . '/befehl/';
+  echo '<tr><td><code>' . h($pf) . 'zwangsladung</code></td><td>1 / 0</td><td>Zwangsladung der Batterie an / aus (der Zustand steht in <code>' . h($s2mcfg['mqtt']['topic_prefix']) . '/live/zwangsladung</code>)</td></tr>';
+  foreach (Control::STECKDOSE as $f => $t) {
+      echo '<tr><td><code>' . h($pf) . 'steckdose&lt;N&gt;/' . h($f) . '</code></td><td>' . ($f === 'modus' ? 'aus / automatik / dauer_ein' : 'Zahl') . '</td><td>' . h($t) . '</td></tr>';
+  }
+  foreach (Control::WALLBOX as $f => $t) {
+      echo '<tr><td><code>' . h($pf) . 'wallbox&lt;N&gt;/' . h($f) . '</code></td><td>' . (in_array($f, ['smart_laden', 'zwischenladen'], true) ? '1 / 0' : 'Ampere') . '</td><td>' . h($t) . '</td></tr>';
+  }
+  ?></table></div>
+  <p class="hint"><code>&lt;N&gt;</code> ist die Nummer der Steckdose bzw. Wallbox, ab 1 (der Speicher unterstützt bis zu vier Wallboxen). Die aktuellen Einstellungen der Steckdosen und Wallboxen stehen (bei freigegebener Gruppe) als Rohwerte unter <code><?= h($s2mcfg['mqtt']['topic_prefix']) ?>/raw/SOCKETS/…</code> und <code>…/raw/WALLBOX/…</code>.
+     Nicht dabei: Reboot des Speichers, Notstromreserve, Peak-Shaving, SG-Ready (nur über mein-senec.de).</p>
 </div>
 <div class="lb-card"><h3>Status und Lebenszeichen</h3>
   <div class="lb-table-scroll"><table class="lb-table"><tr><th>Topic</th><th>Eingangsname</th><th>Bedeutung</th></tr>

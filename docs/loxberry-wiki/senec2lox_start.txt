@@ -5,7 +5,7 @@
 ^ Autor | Rico Tengler |
 ^ Logo | {{:plugins:senec2lox:senec2lox.png?64|Senec2Lox}} |
 ^ Status | BETA |
-^ Version | 1.4.2 |
+^ Version | 1.5.0 |
 ^ Min. LB Version | 4.0.0.0 |
 ^ Release Download | https://github.com/ricten/Senec2Lox/releases/latest/download/senec2lox.zip |
 ^ Pre-Release Download | - |
@@ -30,7 +30,7 @@ Die wichtigsten Eigenschaften:
   * **Automatische Umschaltung:** Fällt die bevorzugte Quelle aus, speist die nächste die Live-Werte. Die aktive Quelle steht in ''senec/live/quelle''.
   * **Sprechende Topics** wie ''senec/live/pv_w'' oder ''senec/live/batterie_soc''.
   * Einstellungen ohne Neustart, Autostart nach dem Booten und Watchdog.
-  * Nur **lesender** Zugriff auf den Speicher. Das Plugin sendet **keine Steuerbefehle**.
+  * Standardmäßig nur **lesender** Zugriff auf den Speicher. Optional **Steuerung** per MQTT-Befehl aus Loxone (Zwangsladung, schaltbare Steckdosen, Wallbox), ab Werk **gesperrt**, siehe 6.3.
 
 ==== 1.1 Wichtige Grundvoraussetzungen ====
 
@@ -170,6 +170,18 @@ Der Bereich **Log** zeigt die letzten 100 Zeilen und aktualisiert sich alle 5 Se
 
 ----
 
+==== 3.9 Steuerung ====
+
+Reiter //Einstellungen// → //Steuerung//. **Ab Werk alles gesperrt.** Erst den Warnhinweis bestätigen, dann die Gruppen einzeln freigeben:
+
+^ Einstellung ^ Wirkung ^
+| Warnhinweis bestätigt | Ohne Haken bleibt alles gesperrt, auch wenn Gruppen angehakt sind |
+| Zwangsladung | Befehl ''senec/befehl/zwangsladung'' |
+| Schaltbare Steckdosen | Befehle ''senec/befehl/steckdose<N>/…''; das Plugin liest zusätzlich den Abschnitt ''SOCKETS'' |
+| Wallbox | Befehle ''senec/befehl/wallbox<N>/…''; das Plugin liest zusätzlich den Abschnitt ''WALLBOX'' |
+
+**Nur auf eigene Gefahr:** Die Befehle ändern Einstellungen am Speicher über die lokale, nicht dokumentierte Schnittstelle ''lala.cgi'' (dieselbe wie im ioBroker-Adapter). SENEC unterstützt das nicht; es gibt keinen Schutz vor widersprüchlichen Befehlen aus mehreren Quellen.
+
 ===== 4. Datenquellen =====
 
 ^ Quelle ^ Adresse ^ Anmeldung ^ Systeme ^ Standardtakt ^
@@ -177,7 +189,7 @@ Der Bereich **Log** zeigt die letzten 100 Zeilen und aktualisiert sich alle 5 Se
 | **Lokale OpenAPI** | ''https://<IP>:4424/v1/...'' | Token (Registrierung + Freigabe im Portal) | V3, V2/V2.1 ab Firmware 4.4.0 | 60 s |
 | **SENEC.Connect** (Cloud) | ''apim-eds-gwc-prod.azure-api.net'' | Subscription-Key | alle im SENEC-Konto, **einzig für V4/P4/E4** | 300 s |
 
-Alle drei Quellen sind für Endkunden **nur lesend**.
+Alle drei Quellen sind für Endkunden **nur lesend**; nur die lokale ''lala.cgi'' nimmt auch Schreibzugriffe an. Das Plugin sendet Steuerbefehle **nur**, wenn sie ausdrücklich freigegeben sind (siehe 6.3).
 
 **Vorzeichen:** ''netz_w'' ist **+ Bezug / − Einspeisung**, ''batterie_w'' ist **+ Laden / − Entladen**.
 
@@ -222,6 +234,10 @@ Nur wenn die Datenpunkte unter //Schnellabfrage → Wallbox// gewählt sind:
 | ''wallbox_status_code'' | Status der ersten Wallbox |
 
 Alle gewählten Wallbox-Werte stehen zusätzlich als Rohwerte unter ''senec/raw/WALLBOX/<KEY>/<0-3>'' (ein Eintrag je Wallbox).
+
+==== 5.2a Mehrere Wallboxen ====
+
+An den Speicher können bis zu **vier Wallboxen** angeschlossen sein. Zusätzlich zu den Summenwerten (''wallbox_w'', ''wallbox_fahrzeug_verbunden'', ''wallbox_status_code'' der ersten) gibt es je eingerichteter Wallbox ''wallbox1_w'' … ''wallbox4_w'', ''wallbox<N>_fahrzeug_verbunden'' und ''wallbox<N>_status_code'' (Abfrage der Wallbox-Werte in der Schnellabfrage anhaken, siehe 3.3). Die Befehle ''senec/befehl/wallbox<N>/…'' gelten für die Wallbox N (1 bis 4).
 
 ==== 5.3 Info und Status ====
 
@@ -277,6 +293,25 @@ Für Anzeigen eignen sich die getrennten, immer positiven Topics besser als ''ne
 
 ----
 
+==== 6.3 Befehle (Steuerung) ====
+
+**Ab Werk gesperrt** (siehe 3.9). Virtueller Ausgang: Adresse ''/dev/udp/<LoxBerry-IP>/<UDP-Port>'' (Standard 11884, steht im Plugin im Reiter „Einbindung in Loxone“), Befehl bei EIN ''publish senec/befehl/<befehl> <wert>'' (ohne HTTP-Header/Body).
+
+^ Befehl ^ Wert ^ Wirkung ^
+| ''senec/befehl/zwangsladung'' | 1 / 0 | Zwangsladung der Batterie an / aus; Zustand in ''senec/live/zwangsladung'' (1 bei Status 8 und 9) |
+| ''senec/befehl/steckdose<N>/modus'' | aus / automatik / dauer_ein | Betriebsart der Steckdose N |
+| ''…/steckdose<N>/einschaltschwelle_w'', ''abschaltschwelle_w'' | 0–20000 | Schwellen in Watt |
+| ''…/steckdose<N>/ueberschuss_min'', ''einschaltdauer_min'' | 0–1440 | Dauer des Überschusses bzw. Einschaltdauer in Minuten |
+| ''…/steckdose<N>/stunde'', ''minute'' | 0–23, 0–59 | Einschaltzeit (gilt nur im Modus automatik) |
+| ''…/wallbox<N>/ladestrom_max_a'', ''ladestrom_standard_a'', ''ladestrom_min_a'' | 6–32 | Ladeströme in Ampere |
+| ''…/wallbox<N>/smart_laden'', ''zwischenladen'' | 1 / 0 | Smart-Laden; Zwischenladen aus der Batterie erlauben |
+
+**Quittung:** Unter ''<topic>/quittung'' meldet das Plugin zuerst ''angenommen'' und dann ''ausgefuehrt'' oder ''abgelehnt: <Grund>''. Höchstens ein Befehl alle 2 Sekunden. Nach dem Schreiben liest das Plugin die Werte zurück und quittiert ''ausgefuehrt'' nur, wenn der Speicher sie übernommen hat. ''<N>'' ist die Nummer der Steckdose bzw. Wallbox ab 1 (bis zu vier Wallboxen).
+
+Geprüft sind an einem echten Speicher die **Zwangsladung** (an und wieder aus, der Zustand folgte mit Status 8 und zurück) und die **Steckdosen** (Schwellen, Zeiten und die Modi aus, automatik und dauer_ein, jeweils mit Zurücklesen; dauer_ein für je etwa 10 Sekunden, danach wieder aus und im Ausgangszustand). Beim Einschalten kann der Speicher kurz langsam antworten; eine Abfrage in dieser Zeit lief einmal in die Zeitüberschreitung. Die **Wallbox** wurde am echten Speicher mit Smart-Laden, Zwischenladen, kleinstem und höchstem Ladestrom geprüft (mit Zurücklesen, danach wieder im Ausgangszustand). Dabei zeigte sich: Den höchsten Ladestrom übernimmt der Speicher erst nach etwa 8 Sekunden, das Plugin wartet darauf bis zu 16 Sekunden, bevor es quittiert. Der **Standard-Ladestrom** (''ladestrom_standard_a'') wurde mit 15 A statt 16 A auch nach 60 Sekunden nicht übernommen; das Plugin quittiert das ehrlich mit „abgelehnt: Der Speicher hat den Wert nicht übernommen“.
+
+**Nicht enthalten:** Reboot des Speichers sowie Notstromreserve, Peak-Shaving und SG-Ready (gibt es nur über mein-senec.de mit Konto-Anmeldung).
+
 ===== 7. Hardware & Netzwerk =====
 
   * **Zertifikate:** Die lokalen Schnittstellen nutzen selbstsignierte Zertifikate. Das Plugin merkt sich den SHA-256-Fingerprint beim ersten Kontakt (//Trust on first use//), warnt bei einer Änderung, übernimmt ihn aber und arbeitet weiter.
@@ -320,6 +355,7 @@ Zuerst: Plugin öffnen und **Status** und **Log** ansehen. Für mehr Details den
 Der vollständige Verlauf steht im [[https://github.com/ricten/Senec2Lox/blob/main/CHANGELOG.md|CHANGELOG.md]].
 
 ^ Version ^ Änderungen ^
+| 1.5.0 | Steuerung per MQTT-Befehl (ab Werk gesperrt, mit Warnhinweis): Zwangsladung, schaltbare Steckdosen, Wallbox, jeweils mit Quittung; ''senec/live/zwangsladung'' |
 | 1.4.2 | Installation und Update prüfen PHP 8.2 oder neuer und brechen sonst mit einer klaren Meldung ab (statt HTTP 500 in der Weboberfläche) |
 | 1.4.1 | Läuft auch mit PHP 8.2 und 8.3 (bisher PHP 8.4 nötig) |
 | 1.4.0 | Automatische Updates (''release.cfg''), Weboberfläche im LoxBerry Design System (Theme-Farben, auch dunkel) |

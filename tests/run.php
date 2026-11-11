@@ -316,6 +316,19 @@ check('UI loxone: Tabelle Status und Lebenszeichen mit Eingangsnamen', str_conta
 $dflt = trim((string)file_get_contents($root . '/senec2lox/config/mqtt_subscriptions.cfg'));
 check('Mitgelieferte Abo-Datei: senec/# (eine Zeile, kein INI)', $dflt, 'senec/#');
 
+[$o] = $uiPage('einstellungen');
+check('UI einstellungen: Karte Steuerung mit Warnhinweis, Bestaetigung und drei Gruppen (ab Werk alles aus)', [str_contains($o, 'Steuerung (Befehle aus Loxone)'), str_contains($o, 'Nur auf eigene Gefahr'), str_contains($o, 'name="ctl_warnung" id="ctl_warnung" value="1">'),
+    str_contains($o, 'name="ctl_zwangsladung" id="ctl_zwangsladung" value="1">'), str_contains($o, 'name="ctl_steckdosen" id="ctl_steckdosen" value="1">'), str_contains($o, 'name="ctl_wallbox" id="ctl_wallbox" value="1">'), str_contains($o, 'ctl_warnung" id="ctl_warnung" value="1" checked')], [true, true, true, true, true, true, false]);
+[$o] = $uiPage('loxone');
+check('UI loxone: Befehlstabelle mit Topics, Quittung, gesperrt', [str_contains($o, 'Befehle aus Loxone (Steuerung)'), str_contains($o, 'senec/befehl/zwangsladung'), str_contains($o, 'steckdose&lt;N&gt;/einschaltschwelle_w'), str_contains($o, 'wallbox&lt;N&gt;/ladestrom_max_a'),
+    str_contains($o, 'quittung'), substr_count($o, '<span class="s2m-bad">nein</span>') >= 3, str_contains($o, 'befehl/reboot')], [true, true, true, true, true, true, false]);
+file_put_contents("$uiDir/dev/senec2lox.json", json_encode(['control' => ['warnung_ok' => true, 'zwangsladung' => true, 'steckdosen' => false, 'wallbox' => true]]));
+[$o] = $uiPage('einstellungen');
+check('UI einstellungen: gespeicherte Freigaben stehen angehakt', [str_contains($o, 'name="ctl_warnung" id="ctl_warnung" value="1" checked'), str_contains($o, 'name="ctl_zwangsladung" id="ctl_zwangsladung" value="1" checked'), str_contains($o, 'name="ctl_steckdosen" id="ctl_steckdosen" value="1">'), str_contains($o, 'name="ctl_wallbox" id="ctl_wallbox" value="1" checked')], [true, true, true, true]);
+[$o] = $uiPage('loxone');
+check('UI loxone: Freigabe je Gruppe sichtbar (Zwangsladung und Wallbox ja, Steckdosen nein)', [str_contains($o, 'Zwangsladung: <span class="s2m-ok">ja</span>'), str_contains($o, 'Steckdosen: <span class="s2m-bad">nein</span>'), str_contains($o, 'Wallbox: <span class="s2m-ok">ja</span>')], [true, true, true]);
+@unlink("$uiDir/dev/senec2lox.json");
+
 // --- Installationspaket ---
 $pcfg = (string)file_get_contents($root . '/senec2lox/plugin.cfg');
 check('plugin.cfg: automatische Updates mit RELEASECFG (raw-URL der release.cfg im Repo)', [str_contains($pcfg, "\nAUTOMATIC_UPDATES=true"), str_contains($pcfg, "\nRELEASECFG=https://raw.githubusercontent.com/ricten/Senec2Lox/main/release.cfg"), str_contains($pcfg, "\nPRERELEASECFG=\n")], [true, true, true]);
@@ -333,6 +346,70 @@ foreach ([[7, 'debug'], [6, 'info'], [5, 'info'], [4, 'warn'], [3, 'error'], [1,
 [$o] = $uiPage('einstellungen');
 check('UI: keine eigene Loglevel-Auswahl mehr, Hinweis auf die Plugin-Verwaltung', !str_contains($o, 'name="log_level"') && str_contains($o, 'LoxBerry-Plugin-Verwaltung eingestellt'), true);
 check('preinstall.sh ist nicht leer, sondern prueft PHP 8.2', is_file($root . '/senec2lox/preinstall.sh') && str_contains((string)file_get_contents($root . '/senec2lox/preinstall.sh'), 'PHP_VERSION_ID'), true);
+
+// --- Mehrere Wallboxen (bis zu vier): Werte je Wallbox ---
+$wb = ['WIZARD' => ['SETUP_NUMBER_WALLBOXES' => 2], 'WALLBOX' => ['APPARENT_CHARGING_POWER' => [0.0, 3700.0, 0.0, 0.0], 'EV_CONNECTED' => [0, 1, 0, 0], 'STATE' => [0, 2, 0, 0]]];
+$wl = Mapper::liveFromLala($wb);
+check('Mapper: nur die eingerichteten Wallboxen (2 von 4) als wallbox<N>_*', [isset($wl['wallbox1_w']), $wl['wallbox2_w'] ?? null, isset($wl['wallbox3_w']), isset($wl['wallbox4_w']), $wl['wallbox2_fahrzeug_verbunden'] ?? null,
+    $wl['wallbox1_fahrzeug_verbunden'] ?? null, $wl['wallbox2_status_code'] ?? null], [true, 3700.0, false, false, 1, 0, 2]);
+check('Mapper: Summenwerte bleiben (Leistung, Fahrzeug an einer Wallbox, Status der ersten)', [$wl['wallbox_w'], $wl['wallbox_fahrzeug_verbunden'], $wl['wallbox_status_code']], [3700.0, 1, 0]);
+$wb['WIZARD']['SETUP_NUMBER_WALLBOXES'] = 4;
+check('Mapper: vier Wallboxen', [isset(Mapper::liveFromLala($wb)['wallbox4_w']), isset(Mapper::liveFromLala($wb)['wallbox5_w'])], [true, false]);
+unset($wb['WIZARD']);
+check('Mapper: ohne Angabe der Anzahl alle vier Stellen', isset(Mapper::liveFromLala($wb)['wallbox4_w']), true);
+
+// --- Steuerung (Befehle aus Loxone): Themen, Werte, Pruefungen ---
+check('Control: Topic zwangsladung', Control::parseTopic('senec', 'senec/befehl/zwangsladung'), ['gruppe' => 'zwangsladung', 'idx' => 0, 'feld' => '', 'name' => 'zwangsladung']);
+check('Control: Topic Steckdose 2', Control::parseTopic('senec', 'senec/befehl/steckdose2/modus'), ['gruppe' => 'steckdosen', 'idx' => 2, 'feld' => 'modus', 'name' => 'steckdose2/modus']);
+check('Control: Topic Wallbox 1', Control::parseTopic('senec', 'senec/befehl/wallbox1/ladestrom_max_a')['gruppe'] ?? null, 'wallbox');
+check('Control: anderer Praefix', Control::parseTopic('meinhaus/senec', 'meinhaus/senec/befehl/zwangsladung')['gruppe'] ?? null, 'zwangsladung');
+check('Control: Quittung, fremde und kaputte Topics sind keine Befehle', [Control::parseTopic('senec', 'senec/befehl/zwangsladung/quittung'), Control::parseTopic('senec', 'senec/live/pv_w'),
+    Control::parseTopic('senec', 'senec/befehl/steckdose0/modus'), Control::parseTopic('senec', 'senec/befehl/reboot'), Control::parseTopic('senec', 'andere/befehl/zwangsladung')], [null, null, null, null, null]);
+check('Control: Werte kodieren (u8, u1, fl)', [Control::hexU8(1), Control::hexU8(255), Control::hexU8(300), Control::hexU16(200), Control::hexU16(70000), Control::hexFloat(16.0), Control::hexFloat(10.5)], ['u8_01', 'u8_FF', 'u8_FF', 'u1_00C8', 'u1_FFFF', 'fl_41800000', 'fl_41280000']);
+check('Control: kodierte Floats lassen sich wieder lesen', SenecDecode::value(Control::hexFloat(13.5)), 13.5);
+check('Control: Body Steckdosen mit leeren Texten fuer die anderen', Control::steckdosenBody(2, 1, ['UPPER_LIMIT' => 'u1_0190']), '{"SOCKETS":{"UPPER_LIMIT":["","u1_0190"]}}');
+check('Control: Body Wallbox mit vier Stellen', Control::wallboxBody(0, ['SET_ICMAX' => 'fl_41800000']), '{"WALLBOX":{"SET_ICMAX":["fl_41800000","","",""]}}');
+check('Control: Steckdose Modus aus/automatik/dauer_ein', [Control::steckdoseFelder('modus', 'aus')['felder'], Control::steckdoseFelder('modus', 'automatik')['felder'], Control::steckdoseFelder('modus', 'DAUER_EIN')['felder']],
+    [['ENABLE' => 'u8_00', 'FORCE_ON' => 'u8_00'], ['ENABLE' => 'u8_01', 'FORCE_ON' => 'u8_00'], ['ENABLE' => 'u8_01', 'FORCE_ON' => 'u8_01']]);
+check('Control: Steckdose Schwellen und Zeiten', [Control::steckdoseFelder('einschaltschwelle_w', '400')['felder'], Control::steckdoseFelder('abschaltschwelle_w', '0')['felder'], Control::steckdoseFelder('ueberschuss_min', '15')['felder'],
+    Control::steckdoseFelder('einschaltdauer_min', '90')['felder'], Control::steckdoseFelder('stunde', '23')['felder'], Control::steckdoseFelder('minute', '59')['felder']],
+    [['UPPER_LIMIT' => 'u1_0190'], ['LOWER_LIMIT' => 'u1_0000'], ['POWER_ON_TIME' => 'u1_000F'], ['TIME_LIMIT' => 'u1_005A'], ['SWITCH_ON_HOUR' => 'u8_17'], ['SWITCH_ON_MINUTE' => 'u8_3B']]);
+check('Control: Steckdose ungueltige Werte', [Control::steckdoseFelder('modus', 'an')['fehler'] !== '', Control::steckdoseFelder('einschaltschwelle_w', '20001')['fehler'] !== '', Control::steckdoseFelder('einschaltschwelle_w', '-5')['fehler'] !== '',
+    Control::steckdoseFelder('stunde', '24')['fehler'] !== '', Control::steckdoseFelder('minute', '60')['fehler'] !== '', Control::steckdoseFelder('minute', 'x')['fehler'] !== '', Control::steckdoseFelder('farbe', '1')['fehler']],
+    [true, true, true, true, true, true, 'unbekannter Befehl']);
+check('Control: Wallbox Stroeme, Komma erlaubt', [Control::wallboxFelder('ladestrom_max_a', '16')['felder'], Control::wallboxFelder('ladestrom_standard_a', '10,5')['felder'], Control::wallboxFelder('ladestrom_min_a', '6')['felder']],
+    [['SET_ICMAX' => 'fl_41800000'], ['SET_IDEFAULT' => 'fl_41280000'], ['MIN_CHARGING_CURRENT' => 'fl_40C00000']]);
+check('Control: Wallbox Schalter (Smart-Laden an = u8_03 wie im ioBroker-Adapter)', [Control::wallboxFelder('smart_laden', '1')['felder'], Control::wallboxFelder('smart_laden', '0')['felder'], Control::wallboxFelder('zwischenladen', '1')['felder']],
+    [['SMART_CHARGE_ACTIVE' => 'u8_03'], ['SMART_CHARGE_ACTIVE' => 'u8_00'], ['ALLOW_INTERCHARGE' => 'u8_01']]);
+check('Control: Wallbox ungueltige Werte (unter 6 A, ueber 32 A, kein Schalterwert)', [Control::wallboxFelder('ladestrom_max_a', '5')['fehler'] !== '', Control::wallboxFelder('ladestrom_max_a', '33')['fehler'] !== '', Control::wallboxFelder('smart_laden', '2')['fehler'] !== '',
+    Control::wallboxFelder('ladestrom_max_a', 'abc')['fehler'] !== ''], [true, true, true, true]);
+check('Control: Zwangsladung-Bodies wie im ioBroker-Adapter', [str_contains(Control::BATTERY_ON, '"SAFE_CHARGE_FORCE":"u8_01","SAFE_CHARGE_PROHIBIT":""'), str_contains(Control::BATTERY_OFF, '"SAFE_CHARGE_FORCE":"","SAFE_CHARGE_PROHIBIT":"u8_01"'),
+    json_decode(Control::BATTERY_ON) !== null, json_decode(Control::BATTERY_OFF) !== null], [true, true, true, true]);
+$cfgOff = Config::load('/gibt/es/nicht.json');
+check('Config: Steuerung ab Werk ganz gesperrt', $cfgOff['control'], ['warnung_ok' => false, 'zwangsladung' => false, 'steckdosen' => false, 'wallbox' => false]);
+$cfgGr = $cfgOff;
+$cfgGr['control'] = ['warnung_ok' => false, 'zwangsladung' => true, 'steckdosen' => true, 'wallbox' => true];
+check('Config: Gruppen ohne bestaetigten Warnhinweis werden gesperrt', Config::validate($cfgGr)['control'], ['warnung_ok' => false, 'zwangsladung' => false, 'steckdosen' => false, 'wallbox' => false]);
+$cfgGr['control']['warnung_ok'] = true;
+$cfgGr['control']['steckdosen'] = false;
+check('Config: mit Warnhinweis bleiben die gewaehlten Gruppen', Config::validate($cfgGr)['control'], ['warnung_ok' => true, 'zwangsladung' => true, 'steckdosen' => false, 'wallbox' => true]);
+check('Control: zusaetzliche Abschnitte nur fuer freigegebene Gruppen', [Control::zusatzSektionen($cfgOff), Control::zusatzSektionen(Config::validate($cfgGr)), Control::wirdFrei($cfgGr, 'wallbox'), Control::wirdFrei($cfgGr, 'steckdosen'), Control::wirdFrei($cfgOff, 'zwangsladung')],
+    [[], ['WALLBOX'], true, false, false]);
+check('Mapper: live/zwangsladung bei Status 8 und 9, sonst 0', [Mapper::liveFromLala(['ENERGY' => ['STAT_STATE' => 8]])['zwangsladung'], Mapper::liveFromLala(['ENERGY' => ['STAT_STATE' => 9]])['zwangsladung'],
+    Mapper::liveFromLala(['ENERGY' => ['STAT_STATE' => 14]])['zwangsladung']], [1, 1, 0]);
+
+$ctlCfg = Config::load('/gibt/es/nicht.json');
+$ctlCfg['control'] = ['warnung_ok' => true, 'zwangsladung' => true, 'steckdosen' => true, 'wallbox' => true];
+$ctlLog = new Logger(null);
+$ctlLala = new LalaSource(array_merge($ctlCfg['lala'], ['host' => '127.0.0.1:1']), new State(sys_get_temp_dir() . '/s2m_ctl_state_' . getmypid() . '.json'), $ctlLog);
+$ctl = new Control($ctlCfg, $ctlLala, $ctlLog);
+$ctlB = Control::parseTopic('senec', 'senec/befehl/zwangsladung');
+check('Control: erster Befehl wird geprueft (ungueltiger Wert, ohne Zugriff auf den Speicher)', $ctl->ausfuehren($ctlB, 'ja'), 'abgelehnt: ungültiger Wert (1 oder 0)');
+check('Control: zweiter Befehl direkt danach wird gebremst', $ctl->ausfuehren($ctlB, 'ja'), 'abgelehnt: zu schnell (höchstens ein Befehl alle 2 Sekunden)');
+check('Control: ohne lala-Quelle abgelehnt', (new Control($ctlCfg, null, $ctlLog))->ausfuehren($ctlB, '1'), 'abgelehnt: Die lokale Quelle (lala.cgi) ist nicht eingerichtet');
+check('Control: Gruppe nicht freigegeben', (new Control(array_replace_recursive($ctlCfg, ['control' => ['wallbox' => false]]), $ctlLala, $ctlLog))->ausfuehren(Control::parseTopic('senec', 'senec/befehl/wallbox1/smart_laden'), '1'),
+    'abgelehnt: Befehle sind gesperrt (Gruppe Wallbox im Plugin nicht freigegeben)');
+@unlink(sys_get_temp_dir() . '/s2m_ctl_state_' . getmypid() . '.json');
 
 // --- Dienst gegen Fake-Speicher (lala.cgi) und Fake-Broker: Status und Lebenszeichen ---
 // Der Dienst braucht die PHP-Erweiterung curl (auf dem LoxBerry vorhanden). Lokal ohne curl wird der Test uebersprungen und gemeldet.
@@ -380,6 +457,119 @@ if ($curlArgs === null) {
     check('Dienst: status/ok = 1 bei aktuellen Live-Werten', (bool)preg_match('~senec/status/ok = 1~', $m), true);
     check('Dienst: status/zaehler zaehlt weiter (1, dann 2)', (bool)preg_match('~senec/status/zaehler = 1\b.*senec/status/zaehler = 2~s', $m), true);
     check('Dienst: status/ts ist ein Unix-Zeitstempel', (bool)preg_match('~senec/status/ts = (\d{10})~', $m, $tm) && abs((int)$tm[1] - time()) < 60, true);
+
+    // --- Steuerung ueber MQTT gegen den Fake-Speicher (Befehle aus Loxone) ---
+    $stateFile = sys_get_temp_dir() . '/fake_lala_state_18981.json';
+    @unlink($stateFile);
+    $zustand = fn(): array => (array)json_decode((string)@file_get_contents($stateFile), true);
+    $cmdCfg = json_decode((string)file_get_contents($e2e . '/senec2lox.json'), true);
+    $cmdCfg['control'] = ['warnung_ok' => false, 'zwangsladung' => false, 'steckdosen' => false, 'wallbox' => false];
+    $cmdCfg['lala']['interval_full'] = 10;       // SOCKETS und WALLBOX sollen im Test schnell gelesen werden
+    file_put_contents($e2e . '/senec2lox.json', json_encode($cmdCfg));
+    @unlink($e2e . '/mqtt.out');
+    $mq = $start([$root . '/tests/fake_mqtt.php', '18930', $e2e], $e2e . '/mqtt.out');
+    $la = $start(['-S', '127.0.0.1:18981', $root . '/tests/fake_lala.php'], $e2e . '/lala.out');
+    usleep(800000);
+    $dm = $start(array_merge($curlArgs, [$root . '/senec2lox/bin/senec2lox.php']), $e2e . '/daemon.out');
+    $senden = function (string $topic, string $wert) use ($e2e): void {
+        file_put_contents($e2e . '/inject.txt', $topic . "\t" . $wert . "\n");
+    };
+    $warte = function (callable $f, int $s = 15) {
+        $ende = time() + $s;
+        while (time() < $ende) {
+            if ($f()) {
+                return true;
+            }
+            usleep(250000);
+        }
+        return false;
+    };
+    $quittungen = function (string $topic) use ($mqttLog): array {
+        preg_match_all('~^' . preg_quote($topic, '~') . '/quittung = (.*)$~m', $mqttLog(), $mm);
+        return $mm[1];
+    };
+    $warte(fn() => str_contains($mqttLog(), 'senec/online = 1') && str_contains($mqttLog(), 'senec/live/pv_w'), 20);
+    $senden('senec/befehl/zwangsladung', '1');
+    check('Steuerung: ab Werk gesperrt (Warnhinweis nicht bestaetigt)', $warte(fn() => in_array('abgelehnt: Befehle sind gesperrt (Warnhinweis im Plugin noch nicht bestätigt)', $quittungen('senec/befehl/zwangsladung'), true), 10), true);
+    check('Steuerung: bei gesperrten Befehlen wurde nichts an den Speicher geschrieben', (array)($zustand()['ENERGY'] ?? []), []);
+    check('Steuerung: erste Quittung ist immer "angenommen"', ($quittungen('senec/befehl/zwangsladung')[0] ?? ''), 'angenommen');
+
+    // Warnhinweis bestaetigt und alle Gruppen frei: Dienst uebernimmt die Konfiguration von selbst
+    sleep(1);
+    $cmdCfg['control'] = ['warnung_ok' => true, 'zwangsladung' => true, 'steckdosen' => true, 'wallbox' => true];
+    file_put_contents($e2e . '/senec2lox.json', json_encode($cmdCfg));
+    sleep(3);
+    $senden('senec/befehl/zwangsladung', '1');
+    check('Zwangsladung an: angenommen, dann ausgefuehrt', $warte(fn() => in_array('ausgefuehrt', $quittungen('senec/befehl/zwangsladung'), true), 15), true);
+    check('Zwangsladung an: der Speicher hat SAFE_CHARGE_FORCE = 1 bekommen', ($zustand()['ENERGY']['SAFE_CHARGE_FORCE'] ?? ''), 'u8_01');
+    check('Zwangsladung an: Zustand kommt als live/zwangsladung = 1 und Status 8 an', $warte(fn() => (bool)preg_match('~senec/live/zwangsladung = 1~', $mqttLog()) && (bool)preg_match('~senec/live/status_code = 8~', $mqttLog()), 15), true);
+    sleep(2);
+    $senden('senec/befehl/zwangsladung', '0');
+    check('Zwangsladung aus: ausgefuehrt, SAFE_CHARGE_PROHIBIT = 1, live/zwangsladung = 0', $warte(fn() => count(array_filter($quittungen('senec/befehl/zwangsladung'), fn($q) => $q === 'ausgefuehrt')) >= 2
+        && ($zustand()['ENERGY']['SAFE_CHARGE_PROHIBIT'] ?? '') === 'u8_01' && (bool)preg_match('~senec/live/zwangsladung = 0\b[\s\S]*$~', $mqttLog()), 15), true);
+    sleep(2);
+    $senden('senec/befehl/zwangsladung', 'ja');
+    check('Zwangsladung mit ungueltigem Wert: abgelehnt', $warte(fn() => in_array('abgelehnt: ungültiger Wert (1 oder 0)', $quittungen('senec/befehl/zwangsladung'), true), 10), true);
+    sleep(3);
+    $senden('senec/befehl/steckdose2/modus', 'automatik');
+    check('Steckdose 2 Modus automatik: ausgefuehrt', $warte(fn() => in_array('ausgefuehrt', $quittungen('senec/befehl/steckdose2/modus'), true), 20), true);
+    check('Steckdose 2: ENABLE nur an Stelle 2 gesetzt, Steckdose 1 unveraendert', [$zustand()['SOCKETS']['ENABLE'][1] ?? null, $zustand()['SOCKETS']['ENABLE'][0] ?? null], ['u8_01', null]);
+    sleep(3);
+    $senden('senec/befehl/steckdose1/einschaltschwelle_w', '450');
+    check('Steckdose 1 Einschaltschwelle 450 W: ausgefuehrt, u1_01C2', $warte(fn() => in_array('ausgefuehrt', $quittungen('senec/befehl/steckdose1/einschaltschwelle_w'), true), 20) && ($zustand()['SOCKETS']['UPPER_LIMIT'][0] ?? '') === 'u1_01C2', true);
+    sleep(3);
+    $senden('senec/befehl/steckdose2/stunde', '7');
+    check('Steckdose 2 Stunde 7 im Automatik-Modus: USE_TIME wird mitgefuehrt', $warte(fn() => in_array('ausgefuehrt', $quittungen('senec/befehl/steckdose2/stunde'), true), 20)
+        && ($zustand()['SOCKETS']['SWITCH_ON_HOUR'][1] ?? '') === 'u8_07' && ($zustand()['SOCKETS']['USE_TIME'][1] ?? '') === 'u8_01', true);
+    sleep(3);
+    $senden('senec/befehl/steckdose3/modus', 'aus');
+    check('Steckdose 3 gibt es nicht (Speicher hat 2): abgelehnt', $warte(fn() => in_array('abgelehnt: Steckdose 3 gibt es nicht (der Speicher hat 2)', $quittungen('senec/befehl/steckdose3/modus'), true), 10), true);
+    sleep(3);
+    $senden('senec/befehl/steckdose1/minute', '75');
+    check('Steckdose mit ungueltiger Minute: abgelehnt', $warte(fn() => in_array('abgelehnt: ungültiger Wert (0 bis 59)', $quittungen('senec/befehl/steckdose1/minute'), true), 10), true);
+
+    sleep(3);
+    $senden('senec/befehl/wallbox1/ladestrom_max_a', '12');
+    check('Wallbox 1 Ladestrom max 12 A: ausgefuehrt, Wert im Speicher', $warte(fn() => in_array('ausgefuehrt', $quittungen('senec/befehl/wallbox1/ladestrom_max_a'), true), 20)
+        && SenecDecode::value($zustand()['WALLBOX']['SET_ICMAX'][0] ?? '') === 12.0, true);
+    sleep(3);
+    $senden('senec/befehl/wallbox1/smart_laden', '1');
+    check('Wallbox 1 Smart-Laden an: ausgefuehrt, u8_03', $warte(fn() => in_array('ausgefuehrt', $quittungen('senec/befehl/wallbox1/smart_laden'), true), 20) && ($zustand()['WALLBOX']['SMART_CHARGE_ACTIVE'][0] ?? '') === 'u8_03', true);
+    sleep(3);
+    $senden('senec/befehl/wallbox4/ladestrom_min_a', '7');
+    check('Wallbox 4 (die vierte): Ladestrom min 7 A ausgefuehrt, nur an Stelle 4 geschrieben', $warte(fn() => in_array('ausgefuehrt', $quittungen('senec/befehl/wallbox4/ladestrom_min_a'), true), 20)
+        && SenecDecode::value($zustand()['WALLBOX']['MIN_CHARGING_CURRENT'][3] ?? '') === 7.0 && !isset($zustand()['WALLBOX']['MIN_CHARGING_CURRENT'][0]), true);
+    sleep(3);
+    $senden('senec/befehl/wallbox5/ladestrom_max_a', '12');
+    check('Wallbox 5 gibt es nicht (der Speicher unterstuetzt vier): abgelehnt', $warte(fn() => in_array('abgelehnt: Wallbox 5 gibt es nicht (der Speicher hat 4)', $quittungen('senec/befehl/wallbox5/ladestrom_max_a'), true), 10), true);
+    sleep(3);
+    $senden('senec/befehl/wallbox1/ladestrom_max_a', '40');
+    check('Wallbox mit 40 A: abgelehnt, nichts geschrieben', $warte(fn() => in_array('abgelehnt: ungültiger Wert (6 bis 32 Ampere)', $quittungen('senec/befehl/wallbox1/ladestrom_max_a'), true), 10)
+        && SenecDecode::value($zustand()['WALLBOX']['SET_ICMAX'][0] ?? '') === 12.0, true);
+
+    // Der Speicher uebernimmt einen Wert nicht: das darf nicht als ausgefuehrt quittiert werden
+    sleep(3);
+    $zs = $zustand();
+    $zs['_ignorieren'] = ['WALLBOX.SET_IDEFAULT'];
+    file_put_contents($stateFile, json_encode($zs));
+    $senden('senec/befehl/wallbox1/ladestrom_standard_a', '8');
+    check('Speicher uebernimmt den Wert nicht: abgelehnt mit Hinweis', $warte(fn() => in_array('abgelehnt: Der Speicher hat den Wert nicht übernommen (SET_IDEFAULT)', $quittungen('senec/befehl/wallbox1/ladestrom_standard_a'), true), 45), true);
+
+    // Werte je Wallbox (vier eingerichtet) und Summenwerte
+    check('Vier Wallboxen: Leistung, Fahrzeug und Status je Wallbox, Summe bleibt', $warte(fn() => (bool)preg_match('~senec/live/wallbox1_w = 0\b~', $mqttLog()) && (bool)preg_match('~senec/live/wallbox2_w = 3700~', $mqttLog())
+        && (bool)preg_match('~senec/live/wallbox4_w = 1500~', $mqttLog()) && (bool)preg_match('~senec/live/wallbox2_fahrzeug_verbunden = 1~', $mqttLog()) && (bool)preg_match('~senec/live/wallbox3_fahrzeug_verbunden = 0~', $mqttLog())
+        && (bool)preg_match('~senec/live/wallbox4_status_code = 3~', $mqttLog()) && (bool)preg_match('~senec/live/wallbox_w = 5200~', $mqttLog()), 40), true);
+    check('Keine fuenfte Wallbox als Topic', str_contains($mqttLog(), 'wallbox5_'), false);
+
+    // Rohwerte der freigegebenen Gruppen kommen in Loxone an
+    check('Freigegebene Gruppen: SOCKETS und WALLBOX werden mitgelesen und als Rohwerte veroeffentlicht', $warte(fn() => (bool)preg_match('~senec/raw/SOCKETS/NUMBER_OF_SOCKETS = 2~', $mqttLog()) && (bool)preg_match('~senec/raw/WALLBOX/SET_ICMAX/0 = 12~', $mqttLog()), 40), true);
+    check('Keine Zugangsdaten oder Schluessel in den Quittungen', (bool)preg_match('~quittung = .*(token|key|passwort)~i', $mqttLog()), false);
+    $statusJson = json_decode((string)@file_get_contents($e2e . '/run/status.json'), true);
+    check('status.json: Freigaben und letzter Befehl', [$statusJson['control']['warnung_ok'] ?? null, $statusJson['control']['frei'] ?? null, isset($statusJson['control']['letzter']['befehl'])], [true, ['zwangsladung', 'steckdosen', 'wallbox'], true]);
+    $e2e_stop($dm);
+    $e2e_stop($la);
+    $e2e_stop($mq);
+    @unlink($stateFile);
 }
 
 // Aufraeumen

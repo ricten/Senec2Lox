@@ -6,7 +6,7 @@
 | B | **Lokale OpenAPI** | `https://<IP>:4424/v1/…` | Header `X-Auth-Token` | V3, V2/V2.1 ab Firmware 4.4.0 | 60 s |
 | C | **SENEC.Connect** (Cloud) | `https://apim-eds-gwc-prod.azure-api.net/senec-connect/v1/…` | Header `Ocp-Apim-Subscription-Key` | alle im SENEC-Konto, **einziger Weg für V4/P4/E4** | 300 s |
 
-Alle drei Quellen sind für Endkunden **nur lesend**. Das Plugin sendet keine Steuerbefehle.
+Alle drei Quellen sind für Endkunden **nur lesend**; nur die lokale `lala.cgi` nimmt auch Schreibzugriffe an. Das Plugin sendet **nur dann** Steuerbefehle dorthin, wenn sie ausdrücklich freigegeben sind (siehe [Loxone-Anbindung](Loxone-Anbindung.md), Abschnitt Befehle).
 
 ## A – lala.cgi
 

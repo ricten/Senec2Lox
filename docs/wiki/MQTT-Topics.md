@@ -17,12 +17,16 @@ Präfix (Standard `senec`). Werte sind reine Zahlen oder Text, kein JSON – das
 | `batterie_strom_a` | A | `ENERGY.GUI_BAT_DATA_CURRENT` | `battery.current` | `battery.current` |
 | `pv_ueberschuss_w` | W | – | `meter.powerSurplus` | – |
 | `status_code` / `status_text` | – | `ENERGY.STAT_STATE` + Klartext | – | – |
+| `zwangsladung` | 0/1 | 1, wenn `ENERGY.STAT_STATE` 8 (läuft) oder 9 (fertig) ist | – | – |
 | `netz_frequenz_hz` | Hz | `PM1OBJ1.FREQ` | – | – |
 | `phase_l1_w` … `phase_l3_w` | W | `PWR_UNIT.POWER_L1..3` | – | – |
 | `temp_batterie_max_c` / `temp_batterie_min_c` | °C | `BMS.TEMP_MAX` / `TEMP_MIN` | – | – |
 | `wallbox_w` | W | Summe aus `WALLBOX.APPARENT_CHARGING_POWER` (nur wenn abgefragt) | – | – |
 | `wallbox_fahrzeug_verbunden` | 0/1 | `WALLBOX.EV_CONNECTED` (1, wenn an einer Wallbox ein Fahrzeug steckt) | – | – |
 | `wallbox_status_code` | – | `WALLBOX.STATE` der ersten Wallbox | – | – |
+| `wallbox1_w` … `wallbox4_w` | W | `WALLBOX.APPARENT_CHARGING_POWER` je Wallbox (der Speicher unterstützt bis zu vier; nur die eingerichteten) | – | – |
+| `wallbox1_fahrzeug_verbunden` … `wallbox4_…` | 0/1 | `WALLBOX.EV_CONNECTED` je Wallbox | – | – |
+| `wallbox1_status_code` … `wallbox4_…` | – | `WALLBOX.STATE` je Wallbox | – | – |
 | `quelle` | – | `lala` | `openapi` | `connect` |
 
 Beispiele für `status_text`: `LADEN (14)`, `ENTLADEN (16)`, `AKKU VOLL (13)`, `EIGENVERBRAUCH (21)`.
@@ -54,3 +58,7 @@ Beispiele für `status_text`: `LADEN (14)`, `ENTLADEN (16)`, `AKKU VOLL (13)`, `
 | Connect | `senec/connect/<anlage>/<sektion>/<feld>` |
 
 Rohwerte werden nur bei Änderung gesendet (die Vollabfrage erzeugt schnell mehrere hundert Topics).
+
+## Befehle (nur wenn freigegeben)
+
+`senec/befehl/zwangsladung`, `senec/befehl/steckdose<N>/<feld>`, `senec/befehl/wallbox<N>/<feld>`; Quittung unter `<topic>/quittung`. Alle Befehle und Werte: [Loxone-Anbindung](Loxone-Anbindung.md), Abschnitt 3.

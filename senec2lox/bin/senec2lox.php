@@ -37,6 +37,8 @@ if (function_exists('pcntl_async_signals')) {
 }
 
 $state = new State($paths->state);
+$control = null;       // Steuerbefehle aus Loxone (ab Werk gesperrt)
+$lastCommand = null;   // letzter Befehl: ['befehl','ergebnis','time']
 $s2mcfg = null;
 $cfgMtime = -1;
 $mqtt = null;
@@ -87,7 +89,7 @@ $applyLogLevel = function () use ($log): void {
     }
 };
 $logLevelCheck = 0;
-$reload = function () use (&$s2mcfg, &$cfgMtime, $paths, $log, $applyLogLevel, $state, &$sources, &$snap, &$status) {
+$reload = function () use (&$s2mcfg, &$cfgMtime, $paths, $log, $applyLogLevel, $state, &$sources, &$snap, &$status, &$control) {
     clearstatcache(true, $paths->config);
     $m = is_file($paths->config) ? (int)filemtime($paths->config) : 0;
     if ($m === $cfgMtime && $s2mcfg !== null) {
@@ -105,9 +107,11 @@ $reload = function () use (&$s2mcfg, &$cfgMtime, $paths, $log, $applyLogLevel, $
         unset($status[$n]);
     }
     $c = $s2mcfg;
+    $c['lala']['_extra_sections'] = Control::zusatzSektionen($c);   // SOCKETS/WALLBOX mitlesen, solange die Steuerung dafuer frei ist
     if ($c['lala']['use'] && $c['lala']['host'] !== '') {
         $sources['lala'] = ['obj' => new LalaSource($c['lala'], $state, $log), 'next' => 0, 'interval' => $c['lala']['interval']];
     }
+    $control = new Control($c, $sources['lala']['obj'] ?? null, $log);
     if ($c['openapi']['use'] && ($c['openapi']['host'] !== '' || $c['lala']['host'] !== '')) {
         $sources['openapi'] = ['obj' => new OpenApiSource($c['openapi'], $c['lala']['host'], $state, $log), 'next' => 0, 'interval' => $c['openapi']['interval']];
     }
@@ -217,6 +221,7 @@ while ($running) {
         if ($now >= $mqttNext) {
             $prefix = $s2mcfg['mqtt']['topic_prefix'];
             $mqtt = new MqttClient($h, $p, $u, $pw, 'senec2lox_' . preg_replace('/[^A-Za-z0-9_\-]/', '_', $paths->folder), $prefix . '/online');
+            $mqtt->subscribe($prefix . '/befehl/#');      // Steuerbefehle (ab Werk gesperrt, siehe Control)
             if ($mqtt->connect()) {
                 $mqttKey = $key;
                 $pub = new Publisher($mqtt, $prefix, (bool)$s2mcfg['mqtt']['retain'], (bool)$s2mcfg['mqtt']['only_changes'], (int)$s2mcfg['mqtt']['full_resend_minutes']);
@@ -230,6 +235,26 @@ while ($running) {
                 $mqttBackoff = min(60, $mqttBackoff * 2);
                 $mqttError = $mqtt_err ?? 'unbekannt';
                 $log->warn("MQTT-Verbindung zu $h:$p fehlgeschlagen: $mqttError ($brokerSource)", 'mqtt-conn');
+            }
+        }
+    }
+
+    // --- Steuerbefehle aus Loxone (ab Werk gesperrt) ---
+    if ($mqtt && $mqtt->connected() && $control) {
+        foreach ($mqtt->takeMessages() as [$topic, $payload]) {
+            $b = Control::parseTopic($s2mcfg['mqtt']['topic_prefix'], $topic);
+            if ($b === null) {
+                continue;       // auch alle .../quittung
+            }
+            $mqtt->publish($topic . '/quittung', 'angenommen', false);
+            $ergebnis = $control->ausfuehren($b, $payload);
+            $mqtt->publish($topic . '/quittung', $ergebnis, false);
+            $lastCommand = ['befehl' => $b['name'], 'ergebnis' => $ergebnis, 'time' => time()];
+            if (str_starts_with($ergebnis, 'abgelehnt')) {
+                $log->warn('Befehl ' . $b['name'] . ' ' . $ergebnis);
+            }
+            if ($b['gruppe'] === 'zwangsladung' && $ergebnis === 'ausgefuehrt' && isset($sources['lala'])) {
+                $sources['lala']['next'] = 0;       // neuen Zustand gleich abfragen
             }
         }
     }
@@ -294,6 +319,7 @@ while ($running) {
         'mqtt_uptime' => ($mqtt && $mqtt->connected()) ? $mqtt->uptime() : 0, 'sent' => $sentCount,
         'live_source' => $built['live_source'], 'sources' => $status, 'live' => $live, 'error' => $lastError,
         'openapi_token' => (bool)$state->get('openapi_token'), 'fingerprint_lala' => $state->get('lala_fp'),
+        'control' => ['frei' => array_keys(array_filter(array_intersect_key($s2mcfg['control'] ?? [], Control::GRUPPEN))) , 'warnung_ok' => !empty($s2mcfg['control']['warnung_ok']), 'letzter' => $lastCommand],
     ];
     @file_put_contents($paths->statusFile(), json_encode($st));
     $log->rotateCheck();

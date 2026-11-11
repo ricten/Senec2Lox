@@ -4,7 +4,7 @@
  * Ausserhalb von LoxBerry (Entwicklung/Tests) greift SENEC2LOX_DEV_DIR als Basisverzeichnis.
  */
 foreach (['SenecDecode', 'StateTexts', 'Config', 'State', 'Logger', 'Http', 'MqttClient', 'LalaSource',
-    'OpenApiSource', 'ConnectSource', 'Mapper', 'Publisher', 'Catalog', 'GatewayInfo', 'AppVersion'] as $cls) {
+    'OpenApiSource', 'ConnectSource', 'Control', 'Mapper', 'Publisher', 'Catalog', 'GatewayInfo', 'AppVersion'] as $cls) {
     require_once __DIR__ . '/' . $cls . '.php';
 }
 

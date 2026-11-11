@@ -17,6 +17,8 @@ final class Config
             'mqtt' => ['use_loxberry_broker' => true, 'host' => '', 'port' => 1883, 'user' => '', 'pass' => '',
                 'topic_prefix' => 'senec', 'retain' => true, 'only_changes' => true,
                 'full_resend_minutes' => 5, 'publish_raw' => true],
+            // Steuerbefehle aus Loxone (ab Werk gesperrt): erst nach Bestaetigung des Warnhinweises und je Gruppe freigeben
+            'control' => ['warnung_ok' => false, 'zwangsladung' => false, 'steckdosen' => false, 'wallbox' => false],
             'log_level' => 'info',
         ];
     }
@@ -158,6 +160,10 @@ final class Config
         $m['full_resend_minutes'] = self::clamp($m['full_resend_minutes'], 1, 1440);
         unset($m);
 
+        // Ohne bestaetigten Warnhinweis ist keine Steuerung freigegeben, egal was in den Gruppen steht
+        if (empty($c['control']['warnung_ok'])) {
+            $c['control'] = ['warnung_ok' => false, 'zwangsladung' => false, 'steckdosen' => false, 'wallbox' => false];
+        }
         if (!in_array($c['log_level'], ['error', 'warn', 'info', 'debug'], true)) {
             $c['log_level'] = 'info';
         }

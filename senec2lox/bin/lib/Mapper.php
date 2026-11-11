@@ -106,9 +106,28 @@ final class Mapper
                 $l['wallbox_status_code'] = (int)$first;
             }
         }
+        // Je Wallbox (der Speicher unterstuetzt bis zu vier): wallbox1_w ... wallbox4_w, wallbox<N>_fahrzeug_verbunden, wallbox<N>_status_code
+        $anz = isset($v['WIZARD']['SETUP_NUMBER_WALLBOXES']) && is_numeric($v['WIZARD']['SETUP_NUMBER_WALLBOXES']) ? min(4, (int)$v['WIZARD']['SETUP_NUMBER_WALLBOXES']) : 4;
+        foreach (['APPARENT_CHARGING_POWER' => 'w', 'EV_CONNECTED' => 'fahrzeug_verbunden', 'STATE' => 'status_code'] as $key => $suffix) {
+            if (!isset($w[$key])) {
+                continue;
+            }
+            foreach (array_values((array)$w[$key]) as $i => $x) {
+                if ($i >= $anz) {
+                    break;
+                }
+                $name = 'wallbox' . ($i + 1) . '_' . $suffix;
+                if ($key === 'EV_CONNECTED') {
+                    $l[$name] = ((is_numeric($x) && (float)$x != 0.0) || $x === true) ? 1 : 0;
+                } elseif (is_numeric($x)) {
+                    $l[$name] = $key === 'STATE' ? (int)$x : (float)$x;
+                }
+            }
+        }
         if (isset($e['STAT_STATE']) && is_numeric($e['STAT_STATE'])) {
             $l['status_code'] = (int)$e['STAT_STATE'];
             $l['status_text'] = StateTexts::text((int)$e['STAT_STATE']);
+            $l['zwangsladung'] = in_array((int)$e['STAT_STATE'], [8, 9], true) ? 1 : 0;   // Zwangsladung laeuft (8) bzw. ist fertig (9), wie im ioBroker-Adapter
         }
         return $l;
     }
