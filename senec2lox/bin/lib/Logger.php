@@ -10,9 +10,9 @@
  */
 final class Logger
 {
-    private const array LEVELS = ['error' => 1, 'warn' => 2, 'info' => 3, 'debug' => 4];
-    private const int MAX_BYTES = 1048576;      // darueber wird die Datei auf die letzten KEEP_BYTES gekuerzt
-    private const int KEEP_BYTES = 262144;
+    private const LEVELS = ['error' => 1, 'warn' => 2, 'info' => 3, 'debug' => 4];
+    private const MAX_BYTES = 1048576;      // darueber wird die Datei auf die letzten KEEP_BYTES gekuerzt
+    private const KEEP_BYTES = 262144;
 
     private int $level = 3;
     private array $secrets = [];

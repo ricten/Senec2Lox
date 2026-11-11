@@ -2,7 +2,7 @@
 /** Quelle C: SENEC.Connect (offizielle Cloud-API, Header Ocp-Apim-Subscription-Key). */
 final class ConnectSource
 {
-    public const string URL = 'https://apim-eds-gwc-prod.azure-api.net/senec-connect/v1/systems/device-data/general';
+    public const URL = 'https://apim-eds-gwc-prod.azure-api.net/senec-connect/v1/systems/device-data/general';
 
     private int $failures = 0;
 

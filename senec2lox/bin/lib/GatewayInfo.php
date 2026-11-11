@@ -13,7 +13,7 @@
  */
 final class GatewayInfo
 {
-    public const int UDP_STANDARD = 11884;
+    public const UDP_STANDARD = 11884;
 
     /** general.json der LoxBerry-Systemkonfiguration; leer, wenn nicht lesbar. */
     public static function general(?string $file = null): array

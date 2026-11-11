@@ -5,7 +5,7 @@
  */
 final class OpenApiSource
 {
-    public const array ROUTES = [
+    public const ROUTES = [
         'battery' => '/v1/battery',
         'meter' => '/v1/meter',
         'bess' => '/v1/bess',

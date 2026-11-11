@@ -2,7 +2,7 @@
 /** Dekodierung der lala.cgi-Werte (Praefixe fl_, u1_, i1_ ...). Basiert auf ioBroker.senec (MIT, (c) NoBl). */
 final class SenecDecode
 {
-    public const array ABSENT = ['VARIABLE_NOT_FOUND', 'OBJECT_NOT_FOUND', 'FORBIDDEN'];
+    public const ABSENT = ['VARIABLE_NOT_FOUND', 'OBJECT_NOT_FOUND', 'FORBIDDEN'];
 
     /** @return mixed decodierter Wert oder null = nicht veroeffentlichen */
     public static function value(mixed $v): mixed

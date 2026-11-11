@@ -6,6 +6,11 @@ Versionierung nach [Semantic Versioning](https://semver.org/lang/de/) (`MAJOR.MI
 Release-Ablauf: Version in `senec2lox/plugin.cfg` und `senec2lox/bin/lib/AppVersion.php` erhöhen, hier einen Eintrag ergänzen,
 `bash build.sh` ausführen (prüft die Übereinstimmung), danach Git-Tag `vX.Y.Z` setzen.
 
+## [1.4.1] - 2026-11-11
+
+### Behoben
+- Läuft jetzt auch mit PHP 8.2 und 8.3. Bisher war PHP 8.4 nötig: typisierte Klassenkonstanten gibt es erst ab PHP 8.3, ältere PHP-Versionen brachen mit einem Syntaxfehler ab (HTTP 500 in der Weboberfläche, Dienst startete nicht). Keine Funktionsänderung.
+
 ## [Unveröffentlicht]
 
 ## [1.4.0] – 2026-11-10

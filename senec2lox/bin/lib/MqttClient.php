@@ -8,7 +8,7 @@
  */
 final class MqttClient
 {
-    private const int WRITE_TIMEOUT = 15;       // Sekunden, solange der Broker nichts annimmt
+    private const WRITE_TIMEOUT = 15;       // Sekunden, solange der Broker nichts annimmt
 
     /** @var resource|null */
     private $sock = null;

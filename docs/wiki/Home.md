@@ -34,7 +34,7 @@
 ## Voraussetzungen
 
 - LoxBerry ≥ 4.0 mit aktivem MQTT-Broker (Mosquitto)
-- PHP ≥ 8.4 (CLI) mit `curl`- und `openssl`-Erweiterung
+- PHP ≥ 8.2 (CLI) mit `curl`- und `openssl`-Erweiterung
 - SENEC-Speicher im selben Netz (für lala.cgi/OpenAPI) bzw. SENEC-Konto mit Subscription-Key (für Connect)
 
 ## Lizenz und Danksagung

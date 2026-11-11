@@ -5,9 +5,9 @@
  */
 final class LalaSource
 {
-    public const int MAX_BODY = 11500;
+    public const MAX_BODY = 11500;
 
-    public const array FAST = [
+    public const FAST = [
         'ENERGY' => ['STAT_STATE', 'GUI_BAT_DATA_POWER', 'GUI_INVERTER_POWER', 'GUI_HOUSE_POW', 'GUI_GRID_POW',
             'GUI_BAT_DATA_FUEL_CHARGE', 'GUI_CHARGING_INFO', 'GUI_BOOSTING_INFO', 'GUI_BAT_DATA_VOLTAGE',
             'GUI_BAT_DATA_CURRENT', 'STAT_LIMITED_NET_SKEW', 'SAFE_CHARGE_FORCE', 'SAFE_CHARGE_PROHIBIT',
