@@ -6,8 +6,13 @@ final class ConnectSource
 
     private int $failures = 0;
 
-    public function __construct(private readonly array $cfg, private readonly Logger $log)
+    private array $cfg;
+    private Logger $log;
+
+    public function __construct(array $cfg, Logger $log)
     {
+        $this->cfg = $cfg;
+        $this->log = $log;
         $log->addSecret($cfg['subscription_key']);
     }
 

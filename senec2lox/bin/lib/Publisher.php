@@ -2,17 +2,25 @@
 /** Veroeffentlicht Topics mit Aenderungsfilter und periodischem Komplett-Resend. */
 final class Publisher
 {
-    private readonly int $resend;
+    private int $resend;
     private array $last = [];
     private int $lastFull = 0;
 
+    private MqttClient $mqtt;
+    private string $prefix;
+    private bool $retain;
+    private bool $onlyChanges;
+
     public function __construct(
-        private readonly MqttClient $mqtt,
-        private readonly string $prefix,
-        private readonly bool $retain,
-        private readonly bool $onlyChanges,
-        int $resendMinutes,
-    ) {
+        MqttClient $mqtt,
+        string $prefix,
+        bool $retain,
+        bool $onlyChanges,
+        int $resendMinutes) {
+        $this->mqtt = $mqtt;
+        $this->prefix = $prefix;
+        $this->retain = $retain;
+        $this->onlyChanges = $onlyChanges;
         $this->resend = $resendMinutes * 60;
     }
 

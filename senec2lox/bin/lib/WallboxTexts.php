@@ -17,16 +17,18 @@ final class WallboxTexts
     public const TYPEN = ['auto' => 'automatisch erkennen', 'pro_s' => 'SENEC Wallbox pro S (mit Status-Texten)', 'andere' => 'andere Wallbox (nur Status-Zahl)'];
 
     /** Soll fuer diese Wallbox ein Status-Text veroeffentlicht werden? auto = nur bei bekanntem HW_TYPE. */
-    public static function textFuer(string $einstellung, mixed $hwType): bool
+    public static function textFuer(string $einstellung, $hwType): bool
     {
-        return match ($einstellung) {
-            'pro_s' => true,
-            'andere' => false,
-            default => self::gilt($hwType),
-        };
+        if ($einstellung === 'pro_s') {
+            return true;
+        }
+        if ($einstellung === 'andere') {
+            return false;
+        }
+        return self::gilt($hwType);
     }
 
-    public static function gilt(mixed $hwType): bool
+    public static function gilt($hwType): bool
     {
         return is_numeric($hwType) && isset(self::BEKANNTE_TYPEN[(int)$hwType]);
     }

@@ -16,12 +16,20 @@ final class OpenApiSource
     private string $status = 'unregistered';
     private int $failures = 0;
 
+    private array $cfg;
+    private string $lalaHost;
+    private State $state;
+    private Logger $log;
+
     public function __construct(
-        private readonly array $cfg,
-        private readonly string $lalaHost,
-        private readonly State $state,
-        private readonly Logger $log,
-    ) {
+        array $cfg,
+        string $lalaHost,
+        State $state,
+        Logger $log) {
+        $this->cfg = $cfg;
+        $this->lalaHost = $lalaHost;
+        $this->state = $state;
+        $this->log = $log;
         $t = $state->get('openapi_token');
         if (is_string($t)) {
             $log->addSecret($t);

@@ -3,7 +3,7 @@
 final class Mapper
 {
     /** Zahl/Bool/String -> MQTT-Payload (null = nicht senden). */
-    public static function fmt(mixed $v): ?string
+    public static function fmt($v): ?string
     {
         if ($v === null || is_array($v)) {
             return null;
@@ -19,7 +19,7 @@ final class Mapper
     }
 
     /** Verschachtelte Struktur zu Topics abflachen: prefix/key/sub ... */
-    public static function flatten(string $prefix, mixed $value, array &$out): void
+    public static function flatten(string $prefix, $value, array &$out): void
     {
         if (is_array($value)) {
             foreach ($value as $k => $v) {
@@ -33,7 +33,7 @@ final class Mapper
         }
     }
 
-    private static function num(mixed $v): ?float
+    private static function num($v): ?float
     {
         return is_numeric($v) ? (float)$v : null;
     }
@@ -301,7 +301,7 @@ final class Mapper
         return ['topics' => $topics, 'live_source' => $src];
     }
 
-    private static function infoDefault(array &$topics, string $name, mixed $value): void
+    private static function infoDefault(array &$topics, string $name, $value): void
     {
         $s = self::fmt($value);
         if ($s !== null && $s !== '' && !isset($topics["info/$name"])) {

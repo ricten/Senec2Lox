@@ -34,7 +34,7 @@
 ## Voraussetzungen
 
 - LoxBerry ≥ 4.0 mit aktivem MQTT-Broker (Mosquitto)
-- PHP ≥ 8.2 (CLI) mit `curl`- und `openssl`-Erweiterung. Das hat LoxBerry 4.0 auf Debian 13 (Trixie); auf Debian 11 und 12 ist meist PHP 7.4 aktiv, dann zuerst die Debian-Version anheben ([Anleitung im LoxBerry-Wiki](https://wiki.loxberry.de/installation_von_loxberry/upgrade_distribution/start)). Die Installation prüft das und bricht sonst mit einem Hinweis ab
+- PHP ≥ 7.4 (CLI) mit `curl`- und `openssl`-Erweiterung. Das bringt LoxBerry 4.0 auf Debian 11, 12 und 13 mit (PHP 7.4 bis 8.4). Die Installation prüft das und bricht sonst mit einem Hinweis ab
 - SENEC-Speicher im selben Netz (für lala.cgi/OpenAPI) bzw. SENEC-Konto mit Subscription-Key (für Connect)
 
 ## Lizenz und Danksagung

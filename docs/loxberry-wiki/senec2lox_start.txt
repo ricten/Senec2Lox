@@ -34,7 +34,7 @@ Die wichtigsten Eigenschaften:
 
 ==== 1.1 Wichtige Grundvoraussetzungen ====
 
-  * **LoxBerry 4.0** mit **PHP 8.2 oder neuer** (CLI; das hat LoxBerry 4.0 auf Debian 13, auf Debian 11 und 12 ist meist PHP 7.4 aktiv, die Installation bricht dann mit einem Hinweis ab) und den PHP-Erweiterungen ''curl'' und ''openssl''.
+  * **LoxBerry 4.0** mit **PHP 7.4 oder neuer** (CLI; das bringt LoxBerry 4.0 auf Debian 11, 12 und 13 mit; die Installation bricht bei einem älteren PHP mit einem Hinweis ab) und den PHP-Erweiterungen ''curl'' und ''openssl''.
   * Der **MQTT-Broker** des LoxBerry ist eingerichtet und aktiv (MQTT-Gateway-Plugin installiert).
   * SENEC-Speicher im selben Netz (für ''lala.cgi'' und die lokale OpenAPI) bzw. ein SENEC-Konto mit **Subscription-Key** (für SENEC.Connect).
   * Welche Quelle zu welchem System passt:
@@ -363,6 +363,7 @@ Zuerst: Plugin öffnen und **Status** und **Log** ansehen. Für mehr Details den
 Der vollständige Verlauf steht im [[https://github.com/ricten/Senec2Lox/blob/main/CHANGELOG.md|CHANGELOG.md]].
 
 ^ Version ^ Änderungen ^
+| 1.8.1 | Läuft auch mit PHP 7.4 (Debian 11/12); Installation verlangt mindestens PHP 7.4 (bisher 8.2) |
 | 1.8.0 | Befehl ''entladung_freigeben'' (wie „Entladen freigeben“ der Wartungsseite), Topics ''live/entladung_gesperrt'' und ''live/lagermodus'' |
 | 1.7.0 | Wallbox-Typ je Wallbox wählbar (automatisch, SENEC Wallbox pro S, andere); bestimmt, ob Status-Texte veröffentlicht werden |
 | 1.6.1 | Status-Texte der SENEC Wallbox pro S (''wallbox<N>_status_text''); Ladeströme höchstens bis zum Nennstrom der Wallbox |

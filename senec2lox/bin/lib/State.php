@@ -5,8 +5,11 @@ final class State
     private array $data = [];
     private int $mtime = 0;
 
-    public function __construct(private readonly string $file)
+    private string $file;
+
+    public function __construct(string $file)
     {
+        $this->file = $file;
         $this->reload(true);
     }
 
@@ -41,12 +44,12 @@ final class State
         $this->data = is_array($j) ? $j : [];
     }
 
-    public function get(string $key, mixed $default = null): mixed
+    public function get(string $key, $default = null)
     {
         return $this->data[$key] ?? $default;
     }
 
-    public function set(string $key, mixed $value): void
+    public function set(string $key, $value): void
     {
         if ($value === null) {
             unset($this->data[$key]);

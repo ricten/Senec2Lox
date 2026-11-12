@@ -5,7 +5,7 @@ final class SenecDecode
     public const ABSENT = ['VARIABLE_NOT_FOUND', 'OBJECT_NOT_FOUND', 'FORBIDDEN'];
 
     /** @return mixed decodierter Wert oder null = nicht veroeffentlichen */
-    public static function value(mixed $v): mixed
+    public static function value($v)
     {
         if (is_array($v)) {
             return array_map([self::class, 'value'], $v);
@@ -50,7 +50,7 @@ final class SenecDecode
         }
     }
 
-    public static function isAbsent(mixed $raw): bool
+    public static function isAbsent($raw): bool
     {
         return is_string($raw) && in_array($raw, self::ABSENT, true);
     }

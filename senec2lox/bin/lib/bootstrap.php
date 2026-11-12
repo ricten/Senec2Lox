@@ -3,7 +3,7 @@
  * Gemeinsamer Start fuer Dienst und Weboberflaeche: LoxBerry-Bibliotheken, Klassen, Pfade.
  * Ausserhalb von LoxBerry (Entwicklung/Tests) greift SENEC2LOX_DEV_DIR als Basisverzeichnis.
  */
-foreach (['SenecDecode', 'StateTexts', 'WallboxTexts', 'Config', 'State', 'Logger', 'Http', 'MqttClient', 'LalaSource',
+foreach (['Compat', 'SenecDecode', 'StateTexts', 'WallboxTexts', 'Config', 'State', 'Logger', 'Http', 'MqttClient', 'LalaSource',
     'OpenApiSource', 'ConnectSource', 'Control', 'Mapper', 'Publisher', 'Catalog', 'GatewayInfo', 'AppVersion'] as $cls) {
     require_once __DIR__ . '/' . $cls . '.php';
 }

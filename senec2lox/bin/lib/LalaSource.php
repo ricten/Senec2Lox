@@ -28,8 +28,15 @@ final class LalaSource
     private ?string $scheme = null;  // zuletzt erfolgreiches Protokoll ('https' | 'http'), bleibt in state.json gemerkt
     private int $failures = 0;
 
-    public function __construct(private readonly array $cfg, private readonly State $state, private readonly Logger $log)
+    private array $cfg;
+    private State $state;
+    private Logger $log;
+
+    public function __construct(array $cfg, State $state, Logger $log)
     {
+        $this->cfg = $cfg;
+        $this->state = $state;
+        $this->log = $log;
     }
 
     public function interval(): int
@@ -107,7 +114,7 @@ final class LalaSource
     }
 
     /** Letzter abgefragter Wert [SEKTION][KEY] (oder null). */
-    public function wert(string $sec, string $key): mixed
+    public function wert(string $sec, string $key)
     {
         return $this->values[$sec][$key] ?? null;
     }

@@ -184,8 +184,15 @@ final class Control
 
     private float $letzter = 0.0;
 
-    public function __construct(private readonly array $cfg, private readonly ?LalaSource $lala, private readonly Logger $log)
+    private array $cfg;
+    private ?LalaSource $lala;
+    private Logger $log;
+
+    public function __construct(array $cfg, ?LalaSource $lala, Logger $log)
     {
+        $this->cfg = $cfg;
+        $this->lala = $lala;
+        $this->log = $log;
     }
 
     /** Ist die Gruppe freigegeben? (Warnhinweis bestaetigt und Gruppe eingeschaltet) */
@@ -247,11 +254,13 @@ final class Control
             return 'abgelehnt: zu schnell (höchstens ein Befehl alle ' . self::MIN_ABSTAND . ' Sekunden)';
         }
         $this->letzter = microtime(true);
-        return match ($b['gruppe']) {
-            'zwangsladung' => $b['name'] === 'entladung_freigeben' ? $this->entladungFreigeben($wert) : $this->zwangsladung($wert),
-            'steckdosen' => $this->steckdose($b['idx'], $b['feld'], $wert),
-            default => $this->wallbox($b['idx'], $b['feld'], $wert),
-        };
+        if ($b['gruppe'] === 'zwangsladung') {
+            return $b['name'] === 'entladung_freigeben' ? $this->entladungFreigeben($wert) : $this->zwangsladung($wert);
+        }
+        if ($b['gruppe'] === 'steckdosen') {
+            return $this->steckdose($b['idx'], $b['feld'], $wert);
+        }
+        return $this->wallbox($b['idx'], $b['feld'], $wert);
     }
 
     private function zwangsladung(string $wert): string

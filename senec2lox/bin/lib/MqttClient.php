@@ -28,17 +28,35 @@ final class MqttClient
     private int $packetId = 0;
     private bool $acceptRetained = false;
 
+    private string $host;
+    private int $port;
+    private string $user;
+    private string $pass;
+    private string $clientId;
+    private string $willTopic;
+    private int $keepalive;
+    private bool $tls;
+    private int $connectTimeout;
+
     public function __construct(
-        private readonly string $host,
-        private readonly int $port,
-        private readonly string $user,
-        private readonly string $pass,
-        private readonly string $clientId,
-        private readonly string $willTopic,
-        private readonly int $keepalive = 60,
-        private readonly bool $tls = false,
-        private readonly int $connectTimeout = 5,
-    ) {
+        string $host,
+        int $port,
+        string $user,
+        string $pass,
+        string $clientId,
+        string $willTopic,
+        int $keepalive = 60,
+        bool $tls = false,
+        int $connectTimeout = 5) {
+        $this->host = $host;
+        $this->port = $port;
+        $this->user = $user;
+        $this->pass = $pass;
+        $this->clientId = $clientId;
+        $this->willTopic = $willTopic;
+        $this->keepalive = $keepalive;
+        $this->tls = $tls;
+        $this->connectTimeout = $connectTimeout;
     }
 
     public static function str(string $s): string

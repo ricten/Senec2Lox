@@ -345,11 +345,12 @@ foreach ([[7, 'debug'], [6, 'info'], [5, 'info'], [4, 'warn'], [3, 'error'], [1,
     $lg = new Logger(null);
     $lg->setLoxberryLevel($lb);
     $ref = new ReflectionProperty($lg, 'level');
+    $ref->setAccessible(true);    // vor PHP 8.1 noetig
     check("Logger: LoxBerry-Stufe $lb = $name", $ref->getValue($lg), ['debug' => 4, 'info' => 3, 'warn' => 2, 'error' => 1][$name]);
 }
 [$o] = $uiPage('einstellungen');
 check('UI: keine eigene Loglevel-Auswahl mehr, Hinweis auf die Plugin-Verwaltung', !str_contains($o, 'name="log_level"') && str_contains($o, 'LoxBerry-Plugin-Verwaltung eingestellt'), true);
-check('preinstall.sh ist nicht leer, sondern prueft PHP 8.2', is_file($root . '/senec2lox/preinstall.sh') && str_contains((string)file_get_contents($root . '/senec2lox/preinstall.sh'), 'PHP_VERSION_ID'), true);
+check('preinstall.sh ist nicht leer, sondern prueft PHP 7.4', is_file($root . '/senec2lox/preinstall.sh') && str_contains((string)file_get_contents($root . '/senec2lox/preinstall.sh'), 'PHP_VERSION_ID'), true);
 
 // --- Mehrere Wallboxen (bis zu vier): Werte je Wallbox ---
 $wb = ['WIZARD' => ['SETUP_NUMBER_WALLBOXES' => 2], 'WALLBOX' => ['APPARENT_CHARGING_POWER' => [0.0, 3700.0, 0.0, 0.0], 'EV_CONNECTED' => [0, 1, 0, 0], 'STATE' => [0, 2, 0, 0]]];

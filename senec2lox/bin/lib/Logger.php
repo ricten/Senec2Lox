@@ -20,8 +20,13 @@ final class Logger
     private bool $lb;
     private int $checkTick = 0;
 
-    public function __construct(private readonly ?string $file, private readonly string $logName = 'Dienst')
+    private ?string $file;
+    private string $logName;
+
+    public function __construct(?string $file, string $logName = 'Dienst')
     {
+        $this->file = $file;
+        $this->logName = $logName;
         $this->lb = class_exists('LBLog') && function_exists('LOGSTART');
         if ($this->lb) {
             // addtime: Zeitstempel je Zeile; loglevel 7: filtern wir selbst (siehe oben)
