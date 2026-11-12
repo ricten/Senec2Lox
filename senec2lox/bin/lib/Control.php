@@ -323,6 +323,20 @@ final class Control
         if ($nr > $n || $nr > self::WALLBOX_FELDER) {
             return "abgelehnt: Wallbox $nr gibt es nicht (der Speicher hat $n)";
         }
+        // Ladestrom nie ueber dem Nennstrom der Wallbox (MAX_CHARGING_CURRENT_RATED, z. B. 16 A bei der SENEC Wallbox pro S)
+        foreach (['SET_ICMAX', 'SET_IDEFAULT', 'MIN_CHARGING_CURRENT'] as $key) {
+            if (isset($p['felder'][$key])) {
+                $nenn = $this->lala->wert('WALLBOX', 'MAX_CHARGING_CURRENT_RATED');
+                if (!is_array($nenn)) {
+                    $r = $this->lala->lesen('WALLBOX', ['MAX_CHARGING_CURRENT_RATED']);
+                    $nenn = $r['MAX_CHARGING_CURRENT_RATED'] ?? null;
+                }
+                $grenze = is_array($nenn) ? ($nenn[$nr - 1] ?? null) : null;
+                if (is_numeric($grenze) && (float)$grenze > 0 && SenecDecode::value($p['felder'][$key]) > (float)$grenze + 0.001) {
+                    return 'abgelehnt: höher als der Nennstrom der Wallbox (' . rtrim(rtrim(number_format((float)$grenze, 1, '.', ''), '0'), '.') . ' A)';
+                }
+            }
+        }
         // Die Ladestroeme uebernimmt der Speicher erst nach etwa 8 Sekunden (am echten Speicher gemessen): laenger auf die Bestaetigung warten
         $strom = isset($p['felder']['SET_ICMAX']) || isset($p['felder']['SET_IDEFAULT']) || isset($p['felder']['MIN_CHARGING_CURRENT']) || isset($p['felder']['PROHIBIT_USAGE']);
         return $this->schreibenUndPruefen('WALLBOX', self::wallboxBody($nr - 1, $p['felder']), $nr - 1, $p['felder'], "Wallbox $nr", $strom ? 9 : 3, $strom ? 2000000 : 800000);

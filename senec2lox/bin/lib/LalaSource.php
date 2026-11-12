@@ -85,6 +85,10 @@ final class LalaSource
                 $out[$sec] = $k;
             }
         }
+        // Der Text zum Wallbox-Status gilt nur fuer bekannte Wallbox-Typen: den Typ dann mitlesen
+        if (isset($out['WALLBOX']) && in_array('STATE', $out['WALLBOX'], true) && !in_array('HW_TYPE', $out['WALLBOX'], true) && !isset($this->absent['WALLBOX.HW_TYPE'])) {
+            $out['WALLBOX'][] = 'HW_TYPE';
+        }
         return $out;
     }
 

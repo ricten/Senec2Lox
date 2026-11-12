@@ -49,7 +49,7 @@ Das Plugin abonniert `senec/befehl/#` (der Präfix folgt dem Topic-Präfix). Vir
 | `senec/befehl/steckdose<N>/einschaltschwelle_w`, `…/abschaltschwelle_w` | 0–20000 | Schwellen in Watt |
 | `senec/befehl/steckdose<N>/ueberschuss_min`, `…/einschaltdauer_min` | 0–1440 | Dauer des Leistungsüberschusses bzw. Einschaltdauer in Minuten |
 | `senec/befehl/steckdose<N>/stunde`, `…/minute` | 0–23, 0–59 | Einschaltzeit (die Zeitschaltung gilt nur im Modus automatik) |
-| `senec/befehl/wallbox<N>/ladestrom_max_a`, `…/ladestrom_standard_a`, `…/ladestrom_min_a` | 6–32 | Ladeströme in Ampere |
+| `senec/befehl/wallbox<N>/ladestrom_max_a`, `…/ladestrom_standard_a`, `…/ladestrom_min_a` | 6 bis Nennstrom | Ladeströme in Ampere, höchstens bis zum Nennstrom der Wallbox (bei der SENEC Wallbox pro S 16 A) |
 | `senec/befehl/wallbox<N>/smart_laden`, `…/zwischenladen` | 1 / 0 | Smart-Laden an/aus (der Speicher regelt den Ladestrom dynamisch); Zwischenladen aus der Batterie erlauben |
 | `senec/befehl/wallbox<N>/sperre` | 1 / 0 | Wallbox sperren (kein Fahrzeug lädt) / freigeben; der Zustand steht in `senec/live/wallbox<N>_gesperrt` |
 

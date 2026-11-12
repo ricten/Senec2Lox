@@ -27,6 +27,7 @@ Präfix (Standard `senec`). Werte sind reine Zahlen oder Text, kein JSON – das
 | `wallbox1_w` … `wallbox4_w` | W | `WALLBOX.APPARENT_CHARGING_POWER` je Wallbox (der Speicher unterstützt bis zu vier; nur die eingerichteten) | – | – |
 | `wallbox1_fahrzeug_verbunden` … `wallbox4_…` | 0/1 | `WALLBOX.EV_CONNECTED` je Wallbox | – | – |
 | `wallbox1_status_code` … `wallbox4_…` | – | `WALLBOX.STATE` je Wallbox | – | – |
+| `wallbox1_status_text` … `wallbox4_…`, `wallbox_status_text` | Text | Klartext zu `WALLBOX.STATE` (aus dem ioBroker-Adapter), z. B. „Nicht verbunden (161)“, „Lädt (194)“. Nur für die SENEC Wallbox pro S (`HW_TYPE` 20); bei anderen Typen gibt es nur die Zahl | – | – |
 | `wallbox1_gesperrt` … `wallbox4_…` | 0/1 | `WALLBOX.PROHIBIT_USAGE` je Wallbox (1 = gesperrt) | – | – |
 | `quelle` | – | `lala` | `openapi` | `connect` |
 

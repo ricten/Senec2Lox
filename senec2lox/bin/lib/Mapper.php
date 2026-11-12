@@ -104,6 +104,9 @@ final class Mapper
             $first = reset($first);
             if (is_numeric($first)) {
                 $l['wallbox_status_code'] = (int)$first;
+                if (WallboxTexts::gilt(((array)($w['HW_TYPE'] ?? []))[0] ?? null)) {
+                    $l['wallbox_status_text'] = WallboxTexts::text((int)$first);
+                }
             }
         }
         // Je Wallbox (der Speicher unterstuetzt bis zu vier): wallbox1_w ... wallbox4_w, wallbox<N>_fahrzeug_verbunden, wallbox<N>_status_code
@@ -121,6 +124,9 @@ final class Mapper
                     $l[$name] = ((is_numeric($x) && (float)$x != 0.0) || $x === true) ? 1 : 0;
                 } elseif (is_numeric($x)) {
                     $l[$name] = $key === 'STATE' ? (int)$x : (float)$x;
+                    if ($key === 'STATE' && WallboxTexts::gilt(((array)($w['HW_TYPE'] ?? []))[$i] ?? null)) {
+                        $l['wallbox' . ($i + 1) . '_status_text'] = WallboxTexts::text((int)$x);
+                    }
                 }
             }
         }

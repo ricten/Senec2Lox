@@ -5,7 +5,7 @@
 ^ Autor | Rico Tengler |
 ^ Logo | {{:plugins:senec2lox:senec2lox.png?64|Senec2Lox}} |
 ^ Status | BETA |
-^ Version | 1.6.0 |
+^ Version | 1.6.1 |
 ^ Min. LB Version | 4.0.0.0 |
 ^ Release Download | https://github.com/ricten/Senec2Lox/releases/latest/download/senec2lox.zip |
 ^ Pre-Release Download | - |
@@ -237,7 +237,7 @@ Alle gewählten Wallbox-Werte stehen zusätzlich als Rohwerte unter ''senec/raw/
 
 ==== 5.2a Mehrere Wallboxen ====
 
-An den Speicher können bis zu **vier Wallboxen** angeschlossen sein. Zusätzlich zu den Summenwerten (''wallbox_w'', ''wallbox_fahrzeug_verbunden'', ''wallbox_status_code'' der ersten) gibt es je eingerichteter Wallbox ''wallbox1_w'' … ''wallbox4_w'', ''wallbox<N>_fahrzeug_verbunden'', ''wallbox<N>_status_code'' und ''wallbox<N>_gesperrt'' (Abfrage der Wallbox-Werte in der Schnellabfrage anhaken, siehe 3.3). Die Befehle ''senec/befehl/wallbox<N>/…'' gelten für die Wallbox N (1 bis 4).
+An den Speicher können bis zu **vier Wallboxen** angeschlossen sein. Zusätzlich zu den Summenwerten (''wallbox_w'', ''wallbox_fahrzeug_verbunden'', ''wallbox_status_code'' der ersten) gibt es je eingerichteter Wallbox ''wallbox1_w'' … ''wallbox4_w'', ''wallbox<N>_fahrzeug_verbunden'', ''wallbox<N>_status_code'', ''wallbox<N>_status_text'' (nur für die SENEC Wallbox pro S; bei anderen Typen nur die Zahl) und ''wallbox<N>_gesperrt'' (Abfrage der Wallbox-Werte in der Schnellabfrage anhaken, siehe 3.3). Die Befehle ''senec/befehl/wallbox<N>/…'' gelten für die Wallbox N (1 bis 4).
 
 ==== 5.3 Info und Status ====
 
@@ -303,7 +303,7 @@ Für Anzeigen eignen sich die getrennten, immer positiven Topics besser als ''ne
 | ''…/steckdose<N>/einschaltschwelle_w'', ''abschaltschwelle_w'' | 0–20000 | Schwellen in Watt |
 | ''…/steckdose<N>/ueberschuss_min'', ''einschaltdauer_min'' | 0–1440 | Dauer des Überschusses bzw. Einschaltdauer in Minuten |
 | ''…/steckdose<N>/stunde'', ''minute'' | 0–23, 0–59 | Einschaltzeit (gilt nur im Modus automatik) |
-| ''…/wallbox<N>/ladestrom_max_a'', ''ladestrom_standard_a'', ''ladestrom_min_a'' | 6–32 | Ladeströme in Ampere |
+| ''…/wallbox<N>/ladestrom_max_a'', ''ladestrom_standard_a'', ''ladestrom_min_a'' | 6 bis Nennstrom | Ladeströme in Ampere, höchstens bis zum Nennstrom der Wallbox (SENEC Wallbox pro S: 16 A) |
 | ''…/wallbox<N>/smart_laden'', ''zwischenladen'' | 1 / 0 | Smart-Laden (der Speicher regelt den Ladestrom dynamisch); Zwischenladen aus der Batterie erlauben |
 | ''…/wallbox<N>/sperre'' | 1 / 0 | Wallbox sperren (kein Fahrzeug lädt) / freigeben; Zustand in ''senec/live/wallbox<N>_gesperrt'' |
 
@@ -358,6 +358,7 @@ Zuerst: Plugin öffnen und **Status** und **Log** ansehen. Für mehr Details den
 Der vollständige Verlauf steht im [[https://github.com/ricten/Senec2Lox/blob/main/CHANGELOG.md|CHANGELOG.md]].
 
 ^ Version ^ Änderungen ^
+| 1.6.1 | Status-Texte der SENEC Wallbox pro S (''wallbox<N>_status_text''); Ladeströme höchstens bis zum Nennstrom der Wallbox |
 | 1.6.0 | Wallbox sperren und freigeben (''senec/befehl/wallbox<N>/sperre'', ''senec/live/wallbox<N>_gesperrt'') |
 | 1.5.0 | Steuerung per MQTT-Befehl (ab Werk gesperrt, mit Warnhinweis): Zwangsladung, schaltbare Steckdosen, Wallbox, jeweils mit Quittung; ''senec/live/zwangsladung'' |
 | 1.4.2 | Installation und Update prüfen PHP 8.2 oder neuer und brechen sonst mit einer klaren Meldung ab (statt HTTP 500 in der Weboberfläche) |

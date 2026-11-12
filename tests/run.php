@@ -125,6 +125,8 @@ check('connect kaputt', ConnectSource::parse('nope'), null);
 check('state 14', StateTexts::text(14), 'LADEN (14)');
 check('state 13', StateTexts::text(13), 'AKKU VOLL (13)');
 check('state unbekannt', StateTexts::text(9999), 'UNBEKANNT (9999)');
+check('Wallbox-Typen: nur die SENEC Wallbox pro S (HW_TYPE 20) ist bekannt', [WallboxTexts::gilt(20), WallboxTexts::gilt('20'), WallboxTexts::gilt(21), WallboxTexts::gilt(null), WallboxTexts::gilt('x')], [true, true, false, false, false]);
+check('Wallbox-Status: Texte aus dem ioBroker-Adapter', [WallboxTexts::text(161), WallboxTexts::text(177), WallboxTexts::text(194), WallboxTexts::text(243), WallboxTexts::text(7)], ['Nicht verbunden (161)', 'Verbunden (177)', 'Lädt (194)', 'Fehlerstrom erkannt (243)', 'UNBEKANNT (7)']);
 
 // --- State / TOFU ---
 $tmp = sys_get_temp_dir() . '/senec_state_' . getmypid() . '.json';
@@ -352,6 +354,12 @@ $wb = ['WIZARD' => ['SETUP_NUMBER_WALLBOXES' => 2], 'WALLBOX' => ['APPARENT_CHAR
 $wl = Mapper::liveFromLala($wb);
 check('Mapper: nur die eingerichteten Wallboxen (2 von 4) als wallbox<N>_*', [isset($wl['wallbox1_w']), $wl['wallbox2_w'] ?? null, isset($wl['wallbox3_w']), isset($wl['wallbox4_w']), $wl['wallbox2_fahrzeug_verbunden'] ?? null,
     $wl['wallbox1_fahrzeug_verbunden'] ?? null, $wl['wallbox2_status_code'] ?? null], [true, 3700.0, false, false, 1, 0, 2]);
+$stl = Mapper::liveFromLala(['WALLBOX' => ['STATE' => [161, 194, 0, 0], 'HW_TYPE' => [20, 20, 20, 20]], 'WIZARD' => ['SETUP_NUMBER_WALLBOXES' => 2]]);
+check('Mapper: Status-Text je Wallbox und fuer die erste (bekannter Typ)', [$stl['wallbox2_status_text'] ?? null, $stl['wallbox_status_text'] ?? null], ['Lädt (194)', 'Nicht verbunden (161)']);
+$stf = Mapper::liveFromLala(['WALLBOX' => ['STATE' => [161, 194, 0, 0], 'HW_TYPE' => [20, 21, 20, 20]], 'WIZARD' => ['SETUP_NUMBER_WALLBOXES' => 2]]);
+check('Mapper: anderer Wallbox-Typ: nur die Zahl, kein Text (Wallbox 2); Wallbox 1 mit bekanntem Typ hat den Text', [$stf['wallbox2_status_code'] ?? null, isset($stf['wallbox2_status_text']), $stf['wallbox1_status_text'] ?? null], [194, false, 'Nicht verbunden (161)']);
+$stk = Mapper::liveFromLala(['WALLBOX' => ['STATE' => [161, 0, 0, 0]], 'WIZARD' => ['SETUP_NUMBER_WALLBOXES' => 1]]);
+check('Mapper: ohne Typ-Angabe kein Text (nur die Zahl)', [$stk['wallbox1_status_code'] ?? null, isset($stk['wallbox1_status_text']), isset($stk['wallbox_status_text'])], [161, false, false]);
 check('Mapper: gesperrt je Wallbox', [Mapper::liveFromLala(['WALLBOX' => ['PROHIBIT_USAGE' => [1, 0, 0, 0]]])['wallbox1_gesperrt'] ?? null, Mapper::liveFromLala(['WALLBOX' => ['PROHIBIT_USAGE' => [1, 0, 0, 0]]])['wallbox2_gesperrt'] ?? null], [1, 0]);
 check('Mapper: Summenwerte bleiben (Leistung, Fahrzeug an einer Wallbox, Status der ersten)', [$wl['wallbox_w'], $wl['wallbox_fahrzeug_verbunden'], $wl['wallbox_status_code']], [3700.0, 1, 0]);
 $wb['WIZARD']['SETUP_NUMBER_WALLBOXES'] = 4;
@@ -553,6 +561,10 @@ if ($curlArgs === null) {
     $senden('senec/befehl/wallbox5/ladestrom_max_a', '12');
     check('Wallbox 5 gibt es nicht (der Speicher unterstuetzt vier): abgelehnt', $warte(fn() => in_array('abgelehnt: Wallbox 5 gibt es nicht (der Speicher hat 4)', $quittungen('senec/befehl/wallbox5/ladestrom_max_a'), true), 10), true);
     sleep(3);
+    $senden('senec/befehl/wallbox1/ladestrom_max_a', '20');
+    check('Wallbox 20 A (Nennstrom 16 A): abgelehnt, nichts geschrieben', $warte(fn() => in_array('abgelehnt: höher als der Nennstrom der Wallbox (16 A)', $quittungen('senec/befehl/wallbox1/ladestrom_max_a'), true), 15)
+        && SenecDecode::value($zustand()['WALLBOX']['SET_ICMAX'][0] ?? '') === 12.0, true);
+    sleep(3);
     $senden('senec/befehl/wallbox1/ladestrom_max_a', '40');
     check('Wallbox mit 40 A: abgelehnt, nichts geschrieben', $warte(fn() => in_array('abgelehnt: ungültiger Wert (6 bis 32 Ampere)', $quittungen('senec/befehl/wallbox1/ladestrom_max_a'), true), 10)
         && SenecDecode::value($zustand()['WALLBOX']['SET_ICMAX'][0] ?? '') === 12.0, true);
@@ -568,8 +580,9 @@ if ($curlArgs === null) {
     // Werte je Wallbox (vier eingerichtet) und Summenwerte
     check('Vier Wallboxen: Leistung, Fahrzeug und Status je Wallbox, Summe bleibt', $warte(fn() => (bool)preg_match('~senec/live/wallbox1_w = 0\b~', $mqttLog()) && (bool)preg_match('~senec/live/wallbox2_w = 3700~', $mqttLog())
         && (bool)preg_match('~senec/live/wallbox4_w = 1500~', $mqttLog()) && (bool)preg_match('~senec/live/wallbox2_fahrzeug_verbunden = 1~', $mqttLog()) && (bool)preg_match('~senec/live/wallbox3_fahrzeug_verbunden = 0~', $mqttLog())
-        && (bool)preg_match('~senec/live/wallbox4_status_code = 3~', $mqttLog()) && (bool)preg_match('~senec/live/wallbox_w = 5200~', $mqttLog()), 40), true);
-    check('Keine fuenfte Wallbox als Topic', str_contains($mqttLog(), 'wallbox5_'), false);
+        && (bool)preg_match('~senec/live/wallbox4_status_code = 194~', $mqttLog()) && !str_contains($mqttLog(), 'wallbox4_status_text')
+        && (bool)preg_match('~senec/live/wallbox2_status_text = Verbunden \(177\)~', $mqttLog()) && (bool)preg_match('~senec/live/wallbox_status_text = Nicht verbunden \(161\)~', $mqttLog()) && (bool)preg_match('~senec/live/wallbox_w = 5200~', $mqttLog()), 40), true);
+    check('Keine fuenfte Wallbox als Topic; Wallbox 4 (anderer Typ) hat keinen Status-Text', [str_contains($mqttLog(), 'wallbox5_'), str_contains($mqttLog(), 'wallbox4_status_text')], [false, false]);
 
     // Rohwerte der freigegebenen Gruppen kommen in Loxone an
     check('Freigegebene Gruppen: SOCKETS und WALLBOX werden mitgelesen und als Rohwerte veroeffentlicht', $warte(fn() => (bool)preg_match('~senec/raw/SOCKETS/NUMBER_OF_SOCKETS = 2~', $mqttLog()) && (bool)preg_match('~senec/raw/WALLBOX/SET_ICMAX/0 = 12~', $mqttLog()), 40), true);

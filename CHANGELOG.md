@@ -6,6 +6,14 @@ Versionierung nach [Semantic Versioning](https://semver.org/lang/de/) (`MAJOR.MI
 Release-Ablauf: Version in `senec2lox/plugin.cfg` und `senec2lox/bin/lib/AppVersion.php` erhöhen, hier einen Eintrag ergänzen,
 `bash build.sh` ausführen (prüft die Übereinstimmung), danach Git-Tag `vX.Y.Z` setzen.
 
+## [1.6.1] - 2026-11-12
+
+### Neu
+- **Status-Texte der Wallbox:** `senec/live/wallbox<N>_status_text` (je Wallbox) und `senec/live/wallbox_status_text` (erste Wallbox), z. B. „Nicht verbunden (161)“, „Lädt (194)“. Die Texte stammen wie die des Speichers aus dem ioBroker-Adapter (MIT, © NoBl), der nicht nach Wallbox-Modell unterscheidet. Sie werden deshalb **nur für die SENEC Wallbox pro S** (`WALLBOX.HW_TYPE` 20) veröffentlicht; bei anderen Typen und ohne Typ-Angabe gibt es nur die Zahl (`…_status_code`, unverändert). Wer eine andere SENEC-Wallbox hat, kann Typ und Codes in einem Issue melden.
+
+### Geändert
+- Ladeströme der Wallbox (`ladestrom_max_a`, `ladestrom_standard_a`, `ladestrom_min_a`) werden höchstens bis zum Nennstrom der Wallbox angenommen (`MAX_CHARGING_CURRENT_RATED`, bei der SENEC Wallbox pro S 16 A); darüber lautet die Quittung `abgelehnt: höher als der Nennstrom der Wallbox (16 A)`. Vorher waren 6 bis 32 A erlaubt.
+
 ## [1.6.0] - 2026-11-12
 
 ### Neu
