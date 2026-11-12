@@ -34,7 +34,8 @@ final class Control
         'ladestrom_max_a' => 'hoechster Ladestrom in Ampere (6 bis 32)',
         'ladestrom_standard_a' => 'Standard-Ladestrom in Ampere (6 bis 32)',
         'ladestrom_min_a' => 'kleinster Ladestrom in Ampere (6 bis 32)',
-        'smart_laden' => 'Smart-Laden (1 an, 0 aus)',
+        'smart_laden' => 'Smart-Laden: der Speicher regelt den Ladestrom dynamisch (1 an, 0 aus)',
+        'sperre' => 'Wallbox sperren (1) oder freigeben (0): gesperrt lädt kein Fahrzeug',
         'zwischenladen' => 'Zwischenladen aus der Batterie erlauben (1 ja, 0 nein)',
     ];
 
@@ -169,6 +170,9 @@ final class Control
             case 'zwischenladen':
                 $v = self::schalter($w);
                 return $v === null ? $fehl('ungültiger Wert (1 oder 0)') : ['felder' => ['ALLOW_INTERCHARGE' => self::hexU8($v)], 'fehler' => ''];
+            case 'sperre':
+                $v = self::schalter($w);
+                return $v === null ? $fehl('ungültiger Wert (1 sperren oder 0 freigeben)') : ['felder' => ['PROHIBIT_USAGE' => self::hexU8($v)], 'fehler' => ''];
         }
         return $fehl('unbekannter Befehl');
     }
@@ -320,7 +324,7 @@ final class Control
             return "abgelehnt: Wallbox $nr gibt es nicht (der Speicher hat $n)";
         }
         // Die Ladestroeme uebernimmt der Speicher erst nach etwa 8 Sekunden (am echten Speicher gemessen): laenger auf die Bestaetigung warten
-        $strom = isset($p['felder']['SET_ICMAX']) || isset($p['felder']['SET_IDEFAULT']) || isset($p['felder']['MIN_CHARGING_CURRENT']);
+        $strom = isset($p['felder']['SET_ICMAX']) || isset($p['felder']['SET_IDEFAULT']) || isset($p['felder']['MIN_CHARGING_CURRENT']) || isset($p['felder']['PROHIBIT_USAGE']);
         return $this->schreibenUndPruefen('WALLBOX', self::wallboxBody($nr - 1, $p['felder']), $nr - 1, $p['felder'], "Wallbox $nr", $strom ? 9 : 3, $strom ? 2000000 : 800000);
     }
 

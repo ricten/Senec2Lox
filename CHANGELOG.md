@@ -6,6 +6,13 @@ Versionierung nach [Semantic Versioning](https://semver.org/lang/de/) (`MAJOR.MI
 Release-Ablauf: Version in `senec2lox/plugin.cfg` und `senec2lox/bin/lib/AppVersion.php` erhöhen, hier einen Eintrag ergänzen,
 `bash build.sh` ausführen (prüft die Übereinstimmung), danach Git-Tag `vX.Y.Z` setzen.
 
+## [1.6.0] - 2026-11-12
+
+### Neu
+- **Wallbox sperren und freigeben:** `senec/befehl/wallbox<N>/sperre` (1 sperrt, 0 gibt frei; `WALLBOX.PROHIBIT_USAGE`). Gesperrt lädt kein Fahrzeug; freigegeben lädt es wieder nach den Einstellungen. Der Zustand steht in `senec/live/wallbox<N>_gesperrt` (0/1). Wie die Ladeströme mit Zurücklesen und längerem Warten auf die Bestätigung. Kein „Laden starten“: Der Lademodus (Solar, Schnell, Komfort) lässt sich nur über die SENEC-Cloud schalten und ist nicht enthalten.
+- Am echten Speicher geprüft: Die Sperre wird in etwa einer Sekunde übernommen. Nach dem Freigeben stand der höchste Ladestrom (`SET_ICMAX`) bei der Wallbox ohne Fahrzeug auf 0 statt vorher 16 A und musste neu gesetzt werden (`ladestrom_max_a`).
+- Smart-Laden ist als „der Speicher regelt den Ladestrom dynamisch“ beschrieben.
+
 ## [1.5.0] - 2026-11-12
 
 ### Neu

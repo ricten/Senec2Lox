@@ -30,7 +30,7 @@ $db = [
         'MIN_CHARGING_CURRENT' => [fl(6), fl(6), fl(6), fl(6)], 'SMART_CHARGE_ACTIVE' => ['u8_00', 'u8_00', 'u8_00', 'u8_00'],
         'ALLOW_INTERCHARGE' => ['u8_00', 'u8_00', 'u8_00', 'u8_00'],
         'APPARENT_CHARGING_POWER' => [fl(0), fl(3700), fl(0), fl(1500)], 'EV_CONNECTED' => ['u8_00', 'u8_01', 'u8_00', 'u8_01'],
-        'STATE' => ['u8_00', 'u8_02', 'u8_00', 'u8_03']],
+        'STATE' => ['u8_00', 'u8_02', 'u8_00', 'u8_03'], 'PROHIBIT_USAGE' => ['u8_00', 'u8_00', 'u8_00', 'u8_00']],
 ];
 // Schreibzugriffe: nichtleere Werte werden gemerkt (ausser fuer Schluessel in "_ignorieren": der Speicher uebernimmt sie dann nicht)
 $ignorieren = $written['_ignorieren'] ?? [];

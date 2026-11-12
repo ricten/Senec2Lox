@@ -27,6 +27,7 @@ Präfix (Standard `senec`). Werte sind reine Zahlen oder Text, kein JSON – das
 | `wallbox1_w` … `wallbox4_w` | W | `WALLBOX.APPARENT_CHARGING_POWER` je Wallbox (der Speicher unterstützt bis zu vier; nur die eingerichteten) | – | – |
 | `wallbox1_fahrzeug_verbunden` … `wallbox4_…` | 0/1 | `WALLBOX.EV_CONNECTED` je Wallbox | – | – |
 | `wallbox1_status_code` … `wallbox4_…` | – | `WALLBOX.STATE` je Wallbox | – | – |
+| `wallbox1_gesperrt` … `wallbox4_…` | 0/1 | `WALLBOX.PROHIBIT_USAGE` je Wallbox (1 = gesperrt) | – | – |
 | `quelle` | – | `lala` | `openapi` | `connect` |
 
 Beispiele für `status_text`: `LADEN (14)`, `ENTLADEN (16)`, `AKKU VOLL (13)`, `EIGENVERBRAUCH (21)`.

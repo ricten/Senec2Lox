@@ -50,12 +50,15 @@ Das Plugin abonniert `senec/befehl/#` (der Präfix folgt dem Topic-Präfix). Vir
 | `senec/befehl/steckdose<N>/ueberschuss_min`, `…/einschaltdauer_min` | 0–1440 | Dauer des Leistungsüberschusses bzw. Einschaltdauer in Minuten |
 | `senec/befehl/steckdose<N>/stunde`, `…/minute` | 0–23, 0–59 | Einschaltzeit (die Zeitschaltung gilt nur im Modus automatik) |
 | `senec/befehl/wallbox<N>/ladestrom_max_a`, `…/ladestrom_standard_a`, `…/ladestrom_min_a` | 6–32 | Ladeströme in Ampere |
-| `senec/befehl/wallbox<N>/smart_laden`, `…/zwischenladen` | 1 / 0 | Smart-Laden an/aus; Zwischenladen aus der Batterie erlauben |
+| `senec/befehl/wallbox<N>/smart_laden`, `…/zwischenladen` | 1 / 0 | Smart-Laden an/aus (der Speicher regelt den Ladestrom dynamisch); Zwischenladen aus der Batterie erlauben |
+| `senec/befehl/wallbox<N>/sperre` | 1 / 0 | Wallbox sperren (kein Fahrzeug lädt) / freigeben; der Zustand steht in `senec/live/wallbox<N>_gesperrt` |
 
 `<N>` ist die Nummer der Steckdose bzw. Wallbox ab 1 (der Speicher unterstützt bis zu vier Wallboxen). Nach dem Schreiben liest das Plugin die Werte zurück und quittiert `ausgefuehrt` nur, wenn der Speicher sie übernommen hat; sonst `abgelehnt: Der Speicher hat den Wert nicht übernommen`. Weitere Gründe: gesperrt (Warnhinweis oder Gruppe), ungültiger Wert, zu schnell, die Steckdose/Wallbox gibt es nicht, lokale Quelle nicht eingerichtet, Speicher nicht erreichbar, der Speicher kennt die Funktion nicht.
 
 Für freigegebene Steckdosen und Wallbox liest das Plugin zusätzlich die Abschnitte `SOCKETS` und `WALLBOX`; ihre Einstellungen stehen (bei aktiver Option „Rohwerte veröffentlichen“) unter `senec/raw/SOCKETS/…` und `senec/raw/WALLBOX/…`.
 
 Geprüft sind an einem echten Speicher die **Zwangsladung** (an und wieder aus, der Zustand folgte mit Status 8 und zurück) und die **Steckdosen** (Schwellen, Zeiten und die Modi aus, automatik und dauer_ein, jeweils mit Zurücklesen; dauer_ein für je etwa 10 Sekunden, danach wieder aus und im Ausgangszustand). Beim Einschalten kann der Speicher kurz langsam antworten; eine Abfrage in dieser Zeit lief einmal in die Zeitüberschreitung. Die **Wallbox** wurde am echten Speicher mit Smart-Laden, Zwischenladen, kleinstem und höchstem Ladestrom geprüft (mit Zurücklesen, danach wieder im Ausgangszustand). Dabei zeigte sich: Den höchsten Ladestrom übernimmt der Speicher erst nach etwa 8 Sekunden, das Plugin wartet darauf bis zu 16 Sekunden, bevor es quittiert. Der **Standard-Ladestrom** (`ladestrom_standard_a`) wurde mit 15 A statt 16 A auch nach 60 Sekunden nicht übernommen; das Plugin quittiert das ehrlich mit „abgelehnt: Der Speicher hat den Wert nicht übernommen“.
+
+Die **Sperre** (`wallbox<N>/sperre`) wurde am echten Speicher geprüft: Sie wird in etwa einer Sekunde übernommen. Beim Test setzte der Speicher nach dem Freigeben den höchsten Ladestrom (`SET_ICMAX`) von 16 A auf 0 (ohne Fahrzeug); er blieb auf 0, bis er neu gesetzt wurde (`wallbox<N>/ladestrom_max_a`, rund 8 Sekunden bis zur Übernahme). Ob das mit angeschlossenem Fahrzeug anders ist, ist nicht geprüft.
 
 **Nicht enthalten:** Reboot des Speichers sowie Notstromreserve, Peak-Shaving und SG-Ready. Diese gibt es nur über mein-senec.de mit Anmeldung am SENEC-Konto.

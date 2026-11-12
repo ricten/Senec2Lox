@@ -352,6 +352,7 @@ $wb = ['WIZARD' => ['SETUP_NUMBER_WALLBOXES' => 2], 'WALLBOX' => ['APPARENT_CHAR
 $wl = Mapper::liveFromLala($wb);
 check('Mapper: nur die eingerichteten Wallboxen (2 von 4) als wallbox<N>_*', [isset($wl['wallbox1_w']), $wl['wallbox2_w'] ?? null, isset($wl['wallbox3_w']), isset($wl['wallbox4_w']), $wl['wallbox2_fahrzeug_verbunden'] ?? null,
     $wl['wallbox1_fahrzeug_verbunden'] ?? null, $wl['wallbox2_status_code'] ?? null], [true, 3700.0, false, false, 1, 0, 2]);
+check('Mapper: gesperrt je Wallbox', [Mapper::liveFromLala(['WALLBOX' => ['PROHIBIT_USAGE' => [1, 0, 0, 0]]])['wallbox1_gesperrt'] ?? null, Mapper::liveFromLala(['WALLBOX' => ['PROHIBIT_USAGE' => [1, 0, 0, 0]]])['wallbox2_gesperrt'] ?? null], [1, 0]);
 check('Mapper: Summenwerte bleiben (Leistung, Fahrzeug an einer Wallbox, Status der ersten)', [$wl['wallbox_w'], $wl['wallbox_fahrzeug_verbunden'], $wl['wallbox_status_code']], [3700.0, 1, 0]);
 $wb['WIZARD']['SETUP_NUMBER_WALLBOXES'] = 4;
 check('Mapper: vier Wallboxen', [isset(Mapper::liveFromLala($wb)['wallbox4_w']), isset(Mapper::liveFromLala($wb)['wallbox5_w'])], [true, false]);
@@ -381,6 +382,7 @@ check('Control: Wallbox Stroeme, Komma erlaubt', [Control::wallboxFelder('ladest
     [['SET_ICMAX' => 'fl_41800000'], ['SET_IDEFAULT' => 'fl_41280000'], ['MIN_CHARGING_CURRENT' => 'fl_40C00000']]);
 check('Control: Wallbox Schalter (Smart-Laden an = u8_03 wie im ioBroker-Adapter)', [Control::wallboxFelder('smart_laden', '1')['felder'], Control::wallboxFelder('smart_laden', '0')['felder'], Control::wallboxFelder('zwischenladen', '1')['felder']],
     [['SMART_CHARGE_ACTIVE' => 'u8_03'], ['SMART_CHARGE_ACTIVE' => 'u8_00'], ['ALLOW_INTERCHARGE' => 'u8_01']]);
+check('Control: Wallbox sperren und freigeben (PROHIBIT_USAGE)', [Control::wallboxFelder('sperre', '1')['felder'], Control::wallboxFelder('sperre', '0')['felder'], Control::wallboxFelder('sperre', 'ja')['fehler'] !== ''], [['PROHIBIT_USAGE' => 'u8_01'], ['PROHIBIT_USAGE' => 'u8_00'], true]);
 check('Control: Wallbox ungueltige Werte (unter 6 A, ueber 32 A, kein Schalterwert)', [Control::wallboxFelder('ladestrom_max_a', '5')['fehler'] !== '', Control::wallboxFelder('ladestrom_max_a', '33')['fehler'] !== '', Control::wallboxFelder('smart_laden', '2')['fehler'] !== '',
     Control::wallboxFelder('ladestrom_max_a', 'abc')['fehler'] !== ''], [true, true, true, true]);
 check('Control: Zwangsladung-Bodies wie im ioBroker-Adapter', [str_contains(Control::BATTERY_ON, '"SAFE_CHARGE_FORCE":"u8_01","SAFE_CHARGE_PROHIBIT":""'), str_contains(Control::BATTERY_OFF, '"SAFE_CHARGE_FORCE":"","SAFE_CHARGE_PROHIBIT":"u8_01"'),
@@ -539,6 +541,14 @@ if ($curlArgs === null) {
     $senden('senec/befehl/wallbox4/ladestrom_min_a', '7');
     check('Wallbox 4 (die vierte): Ladestrom min 7 A ausgefuehrt, nur an Stelle 4 geschrieben', $warte(fn() => in_array('ausgefuehrt', $quittungen('senec/befehl/wallbox4/ladestrom_min_a'), true), 20)
         && SenecDecode::value($zustand()['WALLBOX']['MIN_CHARGING_CURRENT'][3] ?? '') === 7.0 && !isset($zustand()['WALLBOX']['MIN_CHARGING_CURRENT'][0]), true);
+    sleep(3);
+    $senden('senec/befehl/wallbox3/sperre', '1');
+    check('Wallbox 3 sperren: ausgefuehrt, PROHIBIT_USAGE nur an Stelle 3', $warte(fn() => in_array('ausgefuehrt', $quittungen('senec/befehl/wallbox3/sperre'), true), 30)
+        && ($zustand()['WALLBOX']['PROHIBIT_USAGE'][2] ?? '') === 'u8_01' && !isset($zustand()['WALLBOX']['PROHIBIT_USAGE'][0]), true);
+    check('Wallbox 3 gesperrt kommt als live/wallbox3_gesperrt = 1 an', $warte(fn() => (bool)preg_match('~senec/live/wallbox3_gesperrt = 1~', $mqttLog()), 40), true);
+    sleep(3);
+    $senden('senec/befehl/wallbox3/sperre', '0');
+    check('Wallbox 3 freigeben: ausgefuehrt', $warte(fn() => count(array_filter($quittungen('senec/befehl/wallbox3/sperre'), fn($q) => $q === 'ausgefuehrt')) >= 2, 30) && ($zustand()['WALLBOX']['PROHIBIT_USAGE'][2] ?? '') === 'u8_00', true);
     sleep(3);
     $senden('senec/befehl/wallbox5/ladestrom_max_a', '12');
     check('Wallbox 5 gibt es nicht (der Speicher unterstuetzt vier): abgelehnt', $warte(fn() => in_array('abgelehnt: Wallbox 5 gibt es nicht (der Speicher hat 4)', $quittungen('senec/befehl/wallbox5/ladestrom_max_a'), true), 10), true);

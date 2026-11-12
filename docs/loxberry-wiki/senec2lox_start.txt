@@ -5,7 +5,7 @@
 ^ Autor | Rico Tengler |
 ^ Logo | {{:plugins:senec2lox:senec2lox.png?64|Senec2Lox}} |
 ^ Status | BETA |
-^ Version | 1.5.0 |
+^ Version | 1.6.0 |
 ^ Min. LB Version | 4.0.0.0 |
 ^ Release Download | https://github.com/ricten/Senec2Lox/releases/latest/download/senec2lox.zip |
 ^ Pre-Release Download | - |
@@ -237,7 +237,7 @@ Alle gewählten Wallbox-Werte stehen zusätzlich als Rohwerte unter ''senec/raw/
 
 ==== 5.2a Mehrere Wallboxen ====
 
-An den Speicher können bis zu **vier Wallboxen** angeschlossen sein. Zusätzlich zu den Summenwerten (''wallbox_w'', ''wallbox_fahrzeug_verbunden'', ''wallbox_status_code'' der ersten) gibt es je eingerichteter Wallbox ''wallbox1_w'' … ''wallbox4_w'', ''wallbox<N>_fahrzeug_verbunden'' und ''wallbox<N>_status_code'' (Abfrage der Wallbox-Werte in der Schnellabfrage anhaken, siehe 3.3). Die Befehle ''senec/befehl/wallbox<N>/…'' gelten für die Wallbox N (1 bis 4).
+An den Speicher können bis zu **vier Wallboxen** angeschlossen sein. Zusätzlich zu den Summenwerten (''wallbox_w'', ''wallbox_fahrzeug_verbunden'', ''wallbox_status_code'' der ersten) gibt es je eingerichteter Wallbox ''wallbox1_w'' … ''wallbox4_w'', ''wallbox<N>_fahrzeug_verbunden'', ''wallbox<N>_status_code'' und ''wallbox<N>_gesperrt'' (Abfrage der Wallbox-Werte in der Schnellabfrage anhaken, siehe 3.3). Die Befehle ''senec/befehl/wallbox<N>/…'' gelten für die Wallbox N (1 bis 4).
 
 ==== 5.3 Info und Status ====
 
@@ -304,11 +304,14 @@ Für Anzeigen eignen sich die getrennten, immer positiven Topics besser als ''ne
 | ''…/steckdose<N>/ueberschuss_min'', ''einschaltdauer_min'' | 0–1440 | Dauer des Überschusses bzw. Einschaltdauer in Minuten |
 | ''…/steckdose<N>/stunde'', ''minute'' | 0–23, 0–59 | Einschaltzeit (gilt nur im Modus automatik) |
 | ''…/wallbox<N>/ladestrom_max_a'', ''ladestrom_standard_a'', ''ladestrom_min_a'' | 6–32 | Ladeströme in Ampere |
-| ''…/wallbox<N>/smart_laden'', ''zwischenladen'' | 1 / 0 | Smart-Laden; Zwischenladen aus der Batterie erlauben |
+| ''…/wallbox<N>/smart_laden'', ''zwischenladen'' | 1 / 0 | Smart-Laden (der Speicher regelt den Ladestrom dynamisch); Zwischenladen aus der Batterie erlauben |
+| ''…/wallbox<N>/sperre'' | 1 / 0 | Wallbox sperren (kein Fahrzeug lädt) / freigeben; Zustand in ''senec/live/wallbox<N>_gesperrt'' |
 
 **Quittung:** Unter ''<topic>/quittung'' meldet das Plugin zuerst ''angenommen'' und dann ''ausgefuehrt'' oder ''abgelehnt: <Grund>''. Höchstens ein Befehl alle 2 Sekunden. Nach dem Schreiben liest das Plugin die Werte zurück und quittiert ''ausgefuehrt'' nur, wenn der Speicher sie übernommen hat. ''<N>'' ist die Nummer der Steckdose bzw. Wallbox ab 1 (bis zu vier Wallboxen).
 
 Geprüft sind an einem echten Speicher die **Zwangsladung** (an und wieder aus, der Zustand folgte mit Status 8 und zurück) und die **Steckdosen** (Schwellen, Zeiten und die Modi aus, automatik und dauer_ein, jeweils mit Zurücklesen; dauer_ein für je etwa 10 Sekunden, danach wieder aus und im Ausgangszustand). Beim Einschalten kann der Speicher kurz langsam antworten; eine Abfrage in dieser Zeit lief einmal in die Zeitüberschreitung. Die **Wallbox** wurde am echten Speicher mit Smart-Laden, Zwischenladen, kleinstem und höchstem Ladestrom geprüft (mit Zurücklesen, danach wieder im Ausgangszustand). Dabei zeigte sich: Den höchsten Ladestrom übernimmt der Speicher erst nach etwa 8 Sekunden, das Plugin wartet darauf bis zu 16 Sekunden, bevor es quittiert. Der **Standard-Ladestrom** (''ladestrom_standard_a'') wurde mit 15 A statt 16 A auch nach 60 Sekunden nicht übernommen; das Plugin quittiert das ehrlich mit „abgelehnt: Der Speicher hat den Wert nicht übernommen“.
+
+Die **Sperre** (''wallbox<N>/sperre'') wurde am echten Speicher geprüft: Sie wird in etwa einer Sekunde übernommen. Beim Test setzte der Speicher nach dem Freigeben den höchsten Ladestrom (''SET_ICMAX'') von 16 A auf 0 (ohne Fahrzeug); er blieb auf 0, bis er neu gesetzt wurde (''wallbox<N>/ladestrom_max_a'', rund 8 Sekunden bis zur Übernahme). Ob das mit angeschlossenem Fahrzeug anders ist, ist nicht geprüft.
 
 **Nicht enthalten:** Reboot des Speichers sowie Notstromreserve, Peak-Shaving und SG-Ready (gibt es nur über mein-senec.de mit Konto-Anmeldung).
 
@@ -355,6 +358,7 @@ Zuerst: Plugin öffnen und **Status** und **Log** ansehen. Für mehr Details den
 Der vollständige Verlauf steht im [[https://github.com/ricten/Senec2Lox/blob/main/CHANGELOG.md|CHANGELOG.md]].
 
 ^ Version ^ Änderungen ^
+| 1.6.0 | Wallbox sperren und freigeben (''senec/befehl/wallbox<N>/sperre'', ''senec/live/wallbox<N>_gesperrt'') |
 | 1.5.0 | Steuerung per MQTT-Befehl (ab Werk gesperrt, mit Warnhinweis): Zwangsladung, schaltbare Steckdosen, Wallbox, jeweils mit Quittung; ''senec/live/zwangsladung'' |
 | 1.4.2 | Installation und Update prüfen PHP 8.2 oder neuer und brechen sonst mit einer klaren Meldung ab (statt HTTP 500 in der Weboberfläche) |
 | 1.4.1 | Läuft auch mit PHP 8.2 und 8.3 (bisher PHP 8.4 nötig) |

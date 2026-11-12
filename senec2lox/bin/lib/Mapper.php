@@ -108,7 +108,7 @@ final class Mapper
         }
         // Je Wallbox (der Speicher unterstuetzt bis zu vier): wallbox1_w ... wallbox4_w, wallbox<N>_fahrzeug_verbunden, wallbox<N>_status_code
         $anz = isset($v['WIZARD']['SETUP_NUMBER_WALLBOXES']) && is_numeric($v['WIZARD']['SETUP_NUMBER_WALLBOXES']) ? min(4, (int)$v['WIZARD']['SETUP_NUMBER_WALLBOXES']) : 4;
-        foreach (['APPARENT_CHARGING_POWER' => 'w', 'EV_CONNECTED' => 'fahrzeug_verbunden', 'STATE' => 'status_code'] as $key => $suffix) {
+        foreach (['APPARENT_CHARGING_POWER' => 'w', 'EV_CONNECTED' => 'fahrzeug_verbunden', 'STATE' => 'status_code', 'PROHIBIT_USAGE' => 'gesperrt'] as $key => $suffix) {
             if (!isset($w[$key])) {
                 continue;
             }
@@ -117,7 +117,7 @@ final class Mapper
                     break;
                 }
                 $name = 'wallbox' . ($i + 1) . '_' . $suffix;
-                if ($key === 'EV_CONNECTED') {
+                if ($key === 'EV_CONNECTED' || $key === 'PROHIBIT_USAGE') {
                     $l[$name] = ((is_numeric($x) && (float)$x != 0.0) || $x === true) ? 1 : 0;
                 } elseif (is_numeric($x)) {
                     $l[$name] = $key === 'STATE' ? (int)$x : (float)$x;
