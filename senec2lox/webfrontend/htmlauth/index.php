@@ -314,7 +314,7 @@ LBWeb::lbheader("Senec2Lox", "", "", true);
     (dieselbe, die der ioBroker-Adapter nutzt). SENEC unterstützt das nicht; falsche Werte können den Betrieb stören. Es gibt keinen Schutz vor widersprüchlichen Befehlen aus mehreren Quellen
     (Loxone, App, mein-senec.de). Die Befehle sind ab Werk gesperrt. Geprüft sind an einem echten Speicher die Zwangsladung und die Steckdosen (auch dauer_ein, kurz); auch die Wallbox wurde am echten Speicher geprüft (der Speicher übernimmt Ladeströme erst nach einigen Sekunden; der Standard-Ladestrom ließ sich nicht ändern). Notstromreserve, Peak-Shaving und SG-Ready gibt es nur über mein-senec.de und sind nicht enthalten.</div>
   <?= ftog('ctl_warnung', !empty($s2mcfg['control']['warnung_ok']), 'Ich habe den Warnhinweis gelesen und möchte Steuerbefehle zulassen') ?>
-  <?= ftog('ctl_zwangsladung', !empty($s2mcfg['control']['zwangsladung']), 'Zwangsladung der Batterie an/aus') ?>
+  <?= ftog('ctl_zwangsladung', !empty($s2mcfg['control']['zwangsladung']), 'Zwangsladung (Vollladung) der Batterie an/aus und Entladung freigeben') ?>
   <?= ftog('ctl_steckdosen', !empty($s2mcfg['control']['steckdosen']), 'Schaltbare Steckdosen (Modus, Schwellen, Zeiten)') ?>
   <?= ftog('ctl_wallbox', !empty($s2mcfg['control']['wallbox']), 'Wallbox (Ladeströme, Smart-Laden, Zwischenladen)') ?>
   <p class="hint">Ohne bestätigten Warnhinweis bleibt alles gesperrt, auch wenn eine Gruppe angehakt ist. Befehle gehen nur über die lokale Quelle (lala.cgi). Für Steckdosen und Wallbox liest das Plugin zusätzlich die Abschnitte SOCKETS und WALLBOX,
@@ -363,6 +363,7 @@ LBWeb::lbheader("Senec2Lox", "", "", true);
   <div class="lb-table-scroll"><table class="lb-table"><tr><th>Topic</th><th>Wert</th><th>Wirkung</th></tr>
   <?php
   $pf = $s2mcfg['mqtt']['topic_prefix'] . '/befehl/';
+  echo '<tr><td><code>' . h($pf) . 'entladung_freigeben</code></td><td>1</td><td>Entladung freigeben wie „Entladen freigeben“ auf der Wartungsseite des Speichers: beendet die Vollladung und den Lager-/Modultausch-Modus, wenn sie laufen (der Zustand steht in <code>' . h($s2mcfg['mqtt']['topic_prefix']) . '/live/entladung_gesperrt</code>)</td></tr>';
   echo '<tr><td><code>' . h($pf) . 'zwangsladung</code></td><td>1 / 0</td><td>Zwangsladung der Batterie an / aus (der Zustand steht in <code>' . h($s2mcfg['mqtt']['topic_prefix']) . '/live/zwangsladung</code>)</td></tr>';
   foreach (Control::STECKDOSE as $f => $t) {
       echo '<tr><td><code>' . h($pf) . 'steckdose&lt;N&gt;/' . h($f) . '</code></td><td>' . ($f === 'modus' ? 'aus / automatik / dauer_ein' : 'Zahl') . '</td><td>' . h($t) . '</td></tr>';

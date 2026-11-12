@@ -28,6 +28,7 @@ final class Catalog
                 'SAFE_CHARGE_FORCE' => 'Sicherheitsladung erzwungen',
                 'SAFE_CHARGE_PROHIBIT' => 'Sicherheitsladung verboten',
                 'SAFE_CHARGE_RUNNING' => 'Sicherheitsladung laeuft',
+                'LI_STORAGE_MODE_RUNNING' => 'Lager-/Modultausch-Modus laeuft',
             ]],
             'PV1' => ['PV-Generator', [
                 'POWER_RATIO' => 'PV-Leistungsverhaeltnis',

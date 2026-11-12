@@ -17,6 +17,8 @@ Präfix (Standard `senec`). Werte sind reine Zahlen oder Text, kein JSON – das
 | `batterie_strom_a` | A | `ENERGY.GUI_BAT_DATA_CURRENT` | `battery.current` | `battery.current` |
 | `pv_ueberschuss_w` | W | – | `meter.powerSurplus` | – |
 | `status_code` / `status_text` | – | `ENERGY.STAT_STATE` + Klartext | – | – |
+| `entladung_gesperrt` | 0/1 | 1, solange die Vollladung (`ENERGY.SAFE_CHARGE_RUNNING`) oder der Lager-/Modultausch-Modus (`LI_STORAGE_MODE_RUNNING`) läuft; „Entladen freigeben“ beendet beides | – | – |
+| `lagermodus` | 0/1 | `ENERGY.LI_STORAGE_MODE_RUNNING` (Lager-/Modultausch-Modus aktiv) | – | – |
 | `zwangsladung` | 0/1 | 1, wenn `ENERGY.STAT_STATE` 8 (läuft) oder 9 (fertig) ist | – | – |
 | `netz_frequenz_hz` | Hz | `PM1OBJ1.FREQ` | – | – |
 | `phase_l1_w` … `phase_l3_w` | W | `PWR_UNIT.POWER_L1..3` | – | – |

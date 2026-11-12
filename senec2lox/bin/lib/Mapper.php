@@ -131,6 +131,13 @@ final class Mapper
                 }
             }
         }
+        // Entladung gesperrt: Vollladung (SAFE_CHARGE_RUNNING) oder Lager-/Modultausch-Modus (LI_STORAGE_MODE_RUNNING) laeuft; "Entladen freigeben" beendet beides
+        if (isset($e['LI_STORAGE_MODE_RUNNING']) && is_numeric($e['LI_STORAGE_MODE_RUNNING'])) {
+            $l['lagermodus'] = (int)$e['LI_STORAGE_MODE_RUNNING'] === 1 ? 1 : 0;
+        }
+        if (isset($e['SAFE_CHARGE_RUNNING']) && is_numeric($e['SAFE_CHARGE_RUNNING'])) {
+            $l['entladung_gesperrt'] = ((int)$e['SAFE_CHARGE_RUNNING'] === 1 || (int)($e['LI_STORAGE_MODE_RUNNING'] ?? 0) === 1) ? 1 : 0;
+        }
         if (isset($e['STAT_STATE']) && is_numeric($e['STAT_STATE'])) {
             $l['status_code'] = (int)$e['STAT_STATE'];
             $l['status_text'] = StateTexts::text((int)$e['STAT_STATE']);

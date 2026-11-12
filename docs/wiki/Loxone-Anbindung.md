@@ -45,6 +45,7 @@ Das Plugin abonniert `senec/befehl/#` (der Präfix folgt dem Topic-Präfix). Vir
 | Befehl | Wert | Wirkung |
 |---|---|---|
 | `senec/befehl/zwangsladung` | 1 / 0 | Zwangsladung der Batterie an / aus (`SAFE_CHARGE_FORCE` bzw. `SAFE_CHARGE_PROHIBIT`). Der Zustand steht in `senec/live/zwangsladung` (1 bei Status 8 und 9) und `senec/live/status_text` |
+| `senec/befehl/entladung_freigeben` | 1 | Entladung freigeben wie „Entladen freigeben“ auf der Wartungsseite des Speichers: beendet die Vollladung und den Lager-/Modultausch-Modus, wenn sie laufen; Zustand in `senec/live/entladung_gesperrt` und `senec/live/lagermodus` |
 | `senec/befehl/steckdose<N>/modus` | aus / automatik / dauer_ein | Betriebsart der Steckdose N |
 | `senec/befehl/steckdose<N>/einschaltschwelle_w`, `…/abschaltschwelle_w` | 0–20000 | Schwellen in Watt |
 | `senec/befehl/steckdose<N>/ueberschuss_min`, `…/einschaltdauer_min` | 0–1440 | Dauer des Leistungsüberschusses bzw. Einschaltdauer in Minuten |

@@ -13,12 +13,15 @@
  */
 final class Control
 {
-    public const GRUPPEN = ['zwangsladung' => 'Zwangsladung', 'steckdosen' => 'Steckdosen', 'wallbox' => 'Wallbox'];
+    public const GRUPPEN = ['zwangsladung' => 'Zwangsladung und Entladung freigeben', 'steckdosen' => 'Steckdosen', 'wallbox' => 'Wallbox'];
     public const MIN_ABSTAND = 2;          // Sekunden zwischen zwei Steuerbefehlen
     public const WALLBOX_FELDER = 4;       // Laenge der Arrays im WALLBOX-Objekt
 
     public const BATTERY_ON = '{"ENERGY":{"SAFE_CHARGE_FORCE":"u8_01","SAFE_CHARGE_PROHIBIT":"","SAFE_CHARGE_RUNNING":"","LI_STORAGE_MODE_START":"","LI_STORAGE_MODE_STOP":"","LI_STORAGE_MODE_RUNNING":"","STAT_STATE":""}}';
     public const BATTERY_OFF = '{"ENERGY":{"SAFE_CHARGE_FORCE":"","SAFE_CHARGE_PROHIBIT":"u8_01","SAFE_CHARGE_RUNNING":"","LI_STORAGE_MODE_START":"","LI_STORAGE_MODE_STOP":"","LI_STORAGE_MODE_RUNNING":"","STAT_STATE":""}}';
+
+    /** Beendet den Lager- bzw. Modultausch-Modus (LI_STORAGE_MODE_STOP), wie die Schaltflaeche "Entladen freigeben" der Wartungsseite des Speichers. */
+    public const LAGERMODUS_AUS = '{"ENERGY":{"SAFE_CHARGE_FORCE":"","SAFE_CHARGE_PROHIBIT":"","SAFE_CHARGE_RUNNING":"","LI_STORAGE_MODE_START":"","LI_STORAGE_MODE_STOP":"u8_01","LI_STORAGE_MODE_RUNNING":"","STAT_STATE":""}}';
 
     /** Felder der Steckdosen: name => [Art, Minimum, Maximum, Einheit/Text] */
     public const STECKDOSE = [
@@ -89,8 +92,8 @@ final class Control
     public static function parseTopic(string $prefix, string $topic): ?array
     {
         $p = preg_quote($prefix . '/befehl/', '#');
-        if (preg_match('#^' . $p . 'zwangsladung$#', $topic)) {
-            return ['gruppe' => 'zwangsladung', 'idx' => 0, 'feld' => '', 'name' => 'zwangsladung'];
+        if (preg_match('#^' . $p . '(zwangsladung|entladung_freigeben)$#', $topic, $m0)) {
+            return ['gruppe' => 'zwangsladung', 'idx' => 0, 'feld' => '', 'name' => $m0[1]];
         }
         if (preg_match('#^' . $p . '(steckdose|wallbox)([1-9][0-9]?)/([a-z0-9_]+)$#', $topic, $m)) {
             return ['gruppe' => $m[1] === 'steckdose' ? 'steckdosen' : 'wallbox', 'idx' => (int)$m[2], 'feld' => $m[3], 'name' => $m[1] . $m[2] . '/' . $m[3]];
@@ -245,7 +248,7 @@ final class Control
         }
         $this->letzter = microtime(true);
         return match ($b['gruppe']) {
-            'zwangsladung' => $this->zwangsladung($wert),
+            'zwangsladung' => $b['name'] === 'entladung_freigeben' ? $this->entladungFreigeben($wert) : $this->zwangsladung($wert),
             'steckdosen' => $this->steckdose($b['idx'], $b['feld'], $wert),
             default => $this->wallbox($b['idx'], $b['feld'], $wert),
         };
@@ -268,6 +271,52 @@ final class Control
         }
         $this->log->info('Zwangsladung ' . ($w === '1' ? 'eingeschaltet' : 'ausgeschaltet') . ' (Befehl aus MQTT)');
         return 'ausgefuehrt';
+    }
+
+    /**
+     * "Entladen freigeben" wie auf der Wartungsseite des Speichers: laeuft die Vollladung (SAFE_CHARGE_RUNNING), wird sie beendet (SAFE_CHARGE_PROHIBIT);
+     * laeuft der Lager-/Modultausch-Modus (LI_STORAGE_MODE_RUNNING), wird er beendet (LI_STORAGE_MODE_STOP). Danach wird geprueft, ob beides aus ist.
+     */
+    private function entladungFreigeben(string $wert): string
+    {
+        if (trim($wert) !== '1') {
+            return 'abgelehnt: ungültiger Wert (1 erwartet)';
+        }
+        $z = $this->lala->lesen('ENERGY', ['SAFE_CHARGE_RUNNING', 'LI_STORAGE_MODE_RUNNING']);
+        if ($z === null) {
+            return 'abgelehnt: Der Zustand des Speichers ließ sich nicht lesen';
+        }
+        $vollladung = (int)($z['SAFE_CHARGE_RUNNING'] ?? 0) === 1;
+        $lager = (int)($z['LI_STORAGE_MODE_RUNNING'] ?? 0) === 1;
+        if (!$vollladung && !$lager) {
+            $this->log->info('Entladung freigeben: nichts zu tun (weder Vollladung noch Lagermodus laufen)');
+            return 'ausgefuehrt';
+        }
+        if ($vollladung) {
+            $r = $this->lala->senden(self::BATTERY_OFF);
+            if (!$r['ok']) {
+                return 'abgelehnt: ' . $r['error'];
+            }
+        }
+        if ($lager) {
+            if ($vollladung) {
+                usleep(1500000);
+            }
+            $r = $this->lala->senden(self::LAGERMODUS_AUS);
+            if (!$r['ok']) {
+                return 'abgelehnt: ' . $r['error'];
+            }
+        }
+        for ($versuch = 0; $versuch < 8; $versuch++) {
+            usleep(1500000);
+            $n = $this->lala->lesen('ENERGY', ['SAFE_CHARGE_RUNNING', 'LI_STORAGE_MODE_RUNNING']) ?? [];
+            if ((int)($n['SAFE_CHARGE_RUNNING'] ?? 1) === 0 && (int)($n['LI_STORAGE_MODE_RUNNING'] ?? 1) === 0) {
+                $this->log->info('Entladung freigegeben (' . ($vollladung ? 'Vollladung beendet' : '') . ($vollladung && $lager ? ', ' : '') . ($lager ? 'Lagermodus beendet' : '') . ', Befehl aus MQTT)');
+                return 'ausgefuehrt';
+            }
+        }
+        $this->log->warn('Entladung freigeben: Der Speicher laeuft noch in Vollladung oder Lagermodus', 'control-freigabe');
+        return 'abgelehnt: Der Speicher hat die Entladung noch nicht freigegeben (Vollladung oder Lagermodus laufen noch)';
     }
 
     private function steckdose(int $nr, string $feld, string $wert): string

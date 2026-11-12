@@ -6,6 +6,13 @@ Versionierung nach [Semantic Versioning](https://semver.org/lang/de/) (`MAJOR.MI
 Release-Ablauf: Version in `senec2lox/plugin.cfg` und `senec2lox/bin/lib/AppVersion.php` erhöhen, hier einen Eintrag ergänzen,
 `bash build.sh` ausführen (prüft die Übereinstimmung), danach Git-Tag `vX.Y.Z` setzen.
 
+## [1.8.0] - 2026-11-12
+
+### Neu
+- **Entladung freigeben:** `senec/befehl/entladung_freigeben` (Wert 1), wie die Schaltfläche „Entladen freigeben“ der Wartungsseite des Speichers (Setup → Wartung): Läuft die Vollladung (`SAFE_CHARGE_RUNNING`), wird sie beendet (`SAFE_CHARGE_PROHIBIT`); läuft der Lager- bzw. Modultausch-Modus (`LI_STORAGE_MODE_RUNNING`), wird er beendet (`LI_STORAGE_MODE_STOP`). Danach prüft das Plugin, ob beides aus ist, und quittiert erst dann `ausgefuehrt`. Läuft nichts, ist die Quittung `ausgefuehrt` (nichts zu tun). Gehört zur Gruppe Zwangsladung (Einstellungen → Steuerung); lokal, ohne Konto.
+- Neue Topics: `senec/live/entladung_gesperrt` (1, solange die Vollladung oder der Lagermodus läuft, also die Entladung gesperrt ist) und `senec/live/lagermodus` (`LI_STORAGE_MODE_RUNNING`). Die Zwangsladung (`senec/befehl/zwangsladung`, „Vollladung“ der Wartungsseite) gab es schon.
+- Nicht dabei: den Lager-/Modultausch-Modus **starten** (`LI_STORAGE_MODE_START`, „Modultausch vorbereiten“): Die Wartungsseite zeigt ihn nur angemeldeten Fachleuten, und er sperrt die Entladung für den Batterietausch. Eine Zwangsentladung gibt es nicht.
+
 ## [1.7.0] - 2026-11-12
 
 ### Neu

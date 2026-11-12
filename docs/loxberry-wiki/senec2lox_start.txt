@@ -5,7 +5,7 @@
 ^ Autor | Rico Tengler |
 ^ Logo | {{:plugins:senec2lox:senec2lox.png?64|Senec2Lox}} |
 ^ Status | BETA |
-^ Version | 1.7.0 |
+^ Version | 1.8.0 |
 ^ Min. LB Version | 4.0.0.0 |
 ^ Release Download | https://github.com/ricten/Senec2Lox/releases/latest/download/senec2lox.zip |
 ^ Pre-Release Download | - |
@@ -302,6 +302,7 @@ Für Anzeigen eignen sich die getrennten, immer positiven Topics besser als ''ne
 **Ab Werk gesperrt** (siehe 3.10). Virtueller Ausgang: Adresse ''/dev/udp/<LoxBerry-IP>/<UDP-Port>'' (Standard 11884, steht im Plugin im Reiter „Einbindung in Loxone“), Befehl bei EIN ''publish senec/befehl/<befehl> <wert>'' (ohne HTTP-Header/Body).
 
 ^ Befehl ^ Wert ^ Wirkung ^
+| ''senec/befehl/entladung_freigeben'' | 1 | Entladung freigeben wie „Entladen freigeben“ auf der Wartungsseite des Speichers: beendet die Vollladung und den Lager-/Modultausch-Modus, wenn sie laufen; Zustand in ''senec/live/entladung_gesperrt'' |
 | ''senec/befehl/zwangsladung'' | 1 / 0 | Zwangsladung der Batterie an / aus; Zustand in ''senec/live/zwangsladung'' (1 bei Status 8 und 9) |
 | ''senec/befehl/steckdose<N>/modus'' | aus / automatik / dauer_ein | Betriebsart der Steckdose N |
 | ''…/steckdose<N>/einschaltschwelle_w'', ''abschaltschwelle_w'' | 0–20000 | Schwellen in Watt |
@@ -362,6 +363,7 @@ Zuerst: Plugin öffnen und **Status** und **Log** ansehen. Für mehr Details den
 Der vollständige Verlauf steht im [[https://github.com/ricten/Senec2Lox/blob/main/CHANGELOG.md|CHANGELOG.md]].
 
 ^ Version ^ Änderungen ^
+| 1.8.0 | Befehl ''entladung_freigeben'' (wie „Entladen freigeben“ der Wartungsseite), Topics ''live/entladung_gesperrt'' und ''live/lagermodus'' |
 | 1.7.0 | Wallbox-Typ je Wallbox wählbar (automatisch, SENEC Wallbox pro S, andere); bestimmt, ob Status-Texte veröffentlicht werden |
 | 1.6.1 | Status-Texte der SENEC Wallbox pro S (''wallbox<N>_status_text''); Ladeströme höchstens bis zum Nennstrom der Wallbox |
 | 1.6.0 | Wallbox sperren und freigeben (''senec/befehl/wallbox<N>/sperre'', ''senec/live/wallbox<N>_gesperrt'') |

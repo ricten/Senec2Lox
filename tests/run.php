@@ -323,14 +323,14 @@ check('UI einstellungen: Wallbox-Typ je Wallbox (vier Auswahlfelder, automatisch
 check('UI einstellungen: Karte Steuerung mit Warnhinweis, Bestaetigung und drei Gruppen (ab Werk alles aus)', [str_contains($o, 'Steuerung (Befehle aus Loxone)'), str_contains($o, 'Nur auf eigene Gefahr'), str_contains($o, 'name="ctl_warnung" id="ctl_warnung" value="1">'),
     str_contains($o, 'name="ctl_zwangsladung" id="ctl_zwangsladung" value="1">'), str_contains($o, 'name="ctl_steckdosen" id="ctl_steckdosen" value="1">'), str_contains($o, 'name="ctl_wallbox" id="ctl_wallbox" value="1">'), str_contains($o, 'ctl_warnung" id="ctl_warnung" value="1" checked')], [true, true, true, true, true, true, false]);
 [$o] = $uiPage('loxone');
-check('UI loxone: Befehlstabelle mit Topics, Quittung, gesperrt', [str_contains($o, 'Befehle aus Loxone (Steuerung)'), str_contains($o, 'senec/befehl/zwangsladung'), str_contains($o, 'steckdose&lt;N&gt;/einschaltschwelle_w'), str_contains($o, 'wallbox&lt;N&gt;/ladestrom_max_a'),
-    str_contains($o, 'quittung'), substr_count($o, '<span class="s2m-bad">nein</span>') >= 3, str_contains($o, 'befehl/reboot')], [true, true, true, true, true, true, false]);
+check('UI loxone: Befehlstabelle mit Topics, Quittung, gesperrt', [str_contains($o, 'Befehle aus Loxone (Steuerung)'), str_contains($o, 'senec/befehl/zwangsladung'), str_contains($o, 'senec/befehl/entladung_freigeben'), str_contains($o, 'steckdose&lt;N&gt;/einschaltschwelle_w'), str_contains($o, 'wallbox&lt;N&gt;/ladestrom_max_a'),
+    str_contains($o, 'quittung'), substr_count($o, '<span class="s2m-bad">nein</span>') >= 3, str_contains($o, 'befehl/reboot')], [true, true, true, true, true, true, true, false]);
 file_put_contents("$uiDir/dev/senec2lox.json", json_encode(['wallboxen' => ['typ2' => 'pro_s', 'typ3' => 'andere'], 'control' => ['warnung_ok' => true, 'zwangsladung' => true, 'steckdosen' => false, 'wallbox' => true]]));
 [$o] = $uiPage('einstellungen');
 check('UI einstellungen: gespeicherter Wallbox-Typ steht gewaehlt', [str_contains($o, '<select class="lb-select" name="wb_typ2" id="wb_typ2"><option value="auto">automatisch erkennen</option><option value="pro_s" selected>'), str_contains($o, 'name="wb_typ3" id="wb_typ3"><option value="auto">automatisch erkennen</option><option value="pro_s">SENEC Wallbox pro S (mit Status-Texten)</option><option value="andere" selected>')], [true, true]);
 check('UI einstellungen: gespeicherte Freigaben stehen angehakt', [str_contains($o, 'name="ctl_warnung" id="ctl_warnung" value="1" checked'), str_contains($o, 'name="ctl_zwangsladung" id="ctl_zwangsladung" value="1" checked'), str_contains($o, 'name="ctl_steckdosen" id="ctl_steckdosen" value="1">'), str_contains($o, 'name="ctl_wallbox" id="ctl_wallbox" value="1" checked')], [true, true, true, true]);
 [$o] = $uiPage('loxone');
-check('UI loxone: Freigabe je Gruppe sichtbar (Zwangsladung und Wallbox ja, Steckdosen nein)', [str_contains($o, 'Zwangsladung: <span class="s2m-ok">ja</span>'), str_contains($o, 'Steckdosen: <span class="s2m-bad">nein</span>'), str_contains($o, 'Wallbox: <span class="s2m-ok">ja</span>')], [true, true, true]);
+check('UI loxone: Freigabe je Gruppe sichtbar (Zwangsladung und Wallbox ja, Steckdosen nein)', [str_contains($o, 'Zwangsladung und Entladung freigeben: <span class="s2m-ok">ja</span>'), str_contains($o, 'Steckdosen: <span class="s2m-bad">nein</span>'), str_contains($o, 'Wallbox: <span class="s2m-ok">ja</span>')], [true, true, true]);
 @unlink("$uiDir/dev/senec2lox.json");
 
 // --- Installationspaket ---
@@ -376,6 +376,7 @@ check('Mapper: ohne Angabe der Anzahl alle vier Stellen', isset(Mapper::liveFrom
 
 // --- Steuerung (Befehle aus Loxone): Themen, Werte, Pruefungen ---
 check('Control: Topic zwangsladung', Control::parseTopic('senec', 'senec/befehl/zwangsladung'), ['gruppe' => 'zwangsladung', 'idx' => 0, 'feld' => '', 'name' => 'zwangsladung']);
+check('Control: Topic entladung_freigeben (Gruppe Zwangsladung)', Control::parseTopic('senec', 'senec/befehl/entladung_freigeben'), ['gruppe' => 'zwangsladung', 'idx' => 0, 'feld' => '', 'name' => 'entladung_freigeben']);
 check('Control: Topic Steckdose 2', Control::parseTopic('senec', 'senec/befehl/steckdose2/modus'), ['gruppe' => 'steckdosen', 'idx' => 2, 'feld' => 'modus', 'name' => 'steckdose2/modus']);
 check('Control: Topic Wallbox 1', Control::parseTopic('senec', 'senec/befehl/wallbox1/ladestrom_max_a')['gruppe'] ?? null, 'wallbox');
 check('Control: anderer Praefix', Control::parseTopic('meinhaus/senec', 'meinhaus/senec/befehl/zwangsladung')['gruppe'] ?? null, 'zwangsladung');
@@ -400,6 +401,7 @@ check('Control: Wallbox Schalter (Smart-Laden an = u8_03 wie im ioBroker-Adapter
 check('Control: Wallbox sperren und freigeben (PROHIBIT_USAGE)', [Control::wallboxFelder('sperre', '1')['felder'], Control::wallboxFelder('sperre', '0')['felder'], Control::wallboxFelder('sperre', 'ja')['fehler'] !== ''], [['PROHIBIT_USAGE' => 'u8_01'], ['PROHIBIT_USAGE' => 'u8_00'], true]);
 check('Control: Wallbox ungueltige Werte (unter 6 A, ueber 32 A, kein Schalterwert)', [Control::wallboxFelder('ladestrom_max_a', '5')['fehler'] !== '', Control::wallboxFelder('ladestrom_max_a', '33')['fehler'] !== '', Control::wallboxFelder('smart_laden', '2')['fehler'] !== '',
     Control::wallboxFelder('ladestrom_max_a', 'abc')['fehler'] !== ''], [true, true, true, true]);
+check('Control: Lagermodus beenden wie die Wartungsseite (LI_STORAGE_MODE_STOP = u8_01, nur dieses Feld gesetzt)', [json_decode(Control::LAGERMODUS_AUS, true)['ENERGY']['LI_STORAGE_MODE_STOP'], json_decode(Control::LAGERMODUS_AUS, true)['ENERGY']['LI_STORAGE_MODE_START'], json_decode(Control::LAGERMODUS_AUS, true)['ENERGY']['SAFE_CHARGE_FORCE']], ['u8_01', '', '']);
 check('Control: Zwangsladung-Bodies wie im ioBroker-Adapter', [str_contains(Control::BATTERY_ON, '"SAFE_CHARGE_FORCE":"u8_01","SAFE_CHARGE_PROHIBIT":""'), str_contains(Control::BATTERY_OFF, '"SAFE_CHARGE_FORCE":"","SAFE_CHARGE_PROHIBIT":"u8_01"'),
     json_decode(Control::BATTERY_ON) !== null, json_decode(Control::BATTERY_OFF) !== null], [true, true, true, true]);
 $cfgOff = Config::load('/gibt/es/nicht.json');
@@ -414,6 +416,8 @@ $cfgGr['control']['steckdosen'] = false;
 check('Config: mit Warnhinweis bleiben die gewaehlten Gruppen', Config::validate($cfgGr)['control'], ['warnung_ok' => true, 'zwangsladung' => true, 'steckdosen' => false, 'wallbox' => true]);
 check('Control: zusaetzliche Abschnitte nur fuer freigegebene Gruppen', [Control::zusatzSektionen($cfgOff), Control::zusatzSektionen(Config::validate($cfgGr)), Control::wirdFrei($cfgGr, 'wallbox'), Control::wirdFrei($cfgGr, 'steckdosen'), Control::wirdFrei($cfgOff, 'zwangsladung')],
     [[], ['WALLBOX'], true, false, false]);
+check('Mapper: entladung_gesperrt bei Vollladung oder Lagermodus, sonst 0; lagermodus', [Mapper::liveFromLala(['ENERGY' => ['SAFE_CHARGE_RUNNING' => 1, 'LI_STORAGE_MODE_RUNNING' => 0]])['entladung_gesperrt'], Mapper::liveFromLala(['ENERGY' => ['SAFE_CHARGE_RUNNING' => 0, 'LI_STORAGE_MODE_RUNNING' => 1]])['entladung_gesperrt'],
+    Mapper::liveFromLala(['ENERGY' => ['SAFE_CHARGE_RUNNING' => 0, 'LI_STORAGE_MODE_RUNNING' => 0]])['entladung_gesperrt'], Mapper::liveFromLala(['ENERGY' => ['SAFE_CHARGE_RUNNING' => 0, 'LI_STORAGE_MODE_RUNNING' => 1]])['lagermodus']], [1, 1, 0, 1]);
 check('Mapper: live/zwangsladung bei Status 8 und 9, sonst 0', [Mapper::liveFromLala(['ENERGY' => ['STAT_STATE' => 8]])['zwangsladung'], Mapper::liveFromLala(['ENERGY' => ['STAT_STATE' => 9]])['zwangsladung'],
     Mapper::liveFromLala(['ENERGY' => ['STAT_STATE' => 14]])['zwangsladung']], [1, 1, 0]);
 
@@ -529,6 +533,27 @@ if ($curlArgs === null) {
     sleep(2);
     $senden('senec/befehl/zwangsladung', 'ja');
     check('Zwangsladung mit ungueltigem Wert: abgelehnt', $warte(fn() => in_array('abgelehnt: ungültiger Wert (1 oder 0)', $quittungen('senec/befehl/zwangsladung'), true), 10), true);
+    sleep(3);
+    $senden('senec/befehl/zwangsladung', '1');
+    check('Vollladung an fuer den Test "Entladung freigeben"', $warte(fn() => ($zustand()['ENERGY']['SAFE_CHARGE_RUNNING'] ?? '') === 'u8_01', 20), true);
+    sleep(3);
+    $senden('senec/befehl/entladung_freigeben', '1');
+    check('Entladung freigeben bei laufender Vollladung: ausgefuehrt, Vollladung beendet', $warte(fn() => in_array('ausgefuehrt', $quittungen('senec/befehl/entladung_freigeben'), true), 30)
+        && ($zustand()['ENERGY']['SAFE_CHARGE_RUNNING'] ?? '') === 'u8_00', true);
+    check('Entladung freigeben: live/entladung_gesperrt = 0', $warte(fn() => (bool)preg_match('~senec/live/entladung_gesperrt = 0\b[\s\S]*$~', $mqttLog()), 15), true);
+    $zs = $zustand();
+    $zs['ENERGY']['LI_STORAGE_MODE_RUNNING'] = 'u8_01';
+    file_put_contents($stateFile, json_encode($zs));
+    sleep(3);
+    $senden('senec/befehl/entladung_freigeben', '1');
+    check('Entladung freigeben bei laufendem Lagermodus: LI_STORAGE_MODE_STOP gesendet, Lagermodus beendet', $warte(fn() => count(array_filter($quittungen('senec/befehl/entladung_freigeben'), fn($q) => $q === 'ausgefuehrt')) >= 2, 30)
+        && ($zustand()['ENERGY']['LI_STORAGE_MODE_RUNNING'] ?? '') === 'u8_00', true);
+    sleep(3);
+    $senden('senec/befehl/entladung_freigeben', '1');
+    check('Entladung freigeben, wenn nichts gesperrt ist: ausgefuehrt (nichts zu tun)', $warte(fn() => count(array_filter($quittungen('senec/befehl/entladung_freigeben'), fn($q) => $q === 'ausgefuehrt')) >= 3, 30), true);
+    sleep(3);
+    $senden('senec/befehl/entladung_freigeben', '0');
+    check('Entladung freigeben mit 0: abgelehnt', $warte(fn() => in_array('abgelehnt: ungültiger Wert (1 erwartet)', $quittungen('senec/befehl/entladung_freigeben'), true), 10), true);
     sleep(3);
     $senden('senec/befehl/steckdose2/modus', 'automatik');
     check('Steckdose 2 Modus automatik: ausgefuehrt', $warte(fn() => in_array('ausgefuehrt', $quittungen('senec/befehl/steckdose2/modus'), true), 20), true);

@@ -15,7 +15,8 @@ $db = [
     'ENERGY' => ['STAT_STATE' => 'u8_0E', 'GUI_BAT_DATA_POWER' => fl(250.5), 'GUI_INVERTER_POWER' => fl(1800),
         'GUI_HOUSE_POW' => fl(900), 'GUI_GRID_POW' => fl(-650), 'GUI_BAT_DATA_FUEL_CHARGE' => fl(57.3),
         'GUI_BAT_DATA_VOLTAGE' => fl(52.1), 'GUI_BAT_DATA_CURRENT' => fl(4.8), 'GUI_BOOSTING_INFO' => 'u8_00',
-        'GUI_CHARGING_INFO' => 'u8_01', 'STAT_LIMITED_NET_SKEW' => 'er_01', 'SAFE_CHARGE_FORCE' => 'VARIABLE_NOT_FOUND'],
+        'GUI_CHARGING_INFO' => 'u8_01', 'STAT_LIMITED_NET_SKEW' => 'er_01', 'SAFE_CHARGE_FORCE' => 'VARIABLE_NOT_FOUND',
+        'SAFE_CHARGE_RUNNING' => 'u8_00', 'LI_STORAGE_MODE_RUNNING' => 'u8_00'],
     'PV1' => ['POWER_RATIO' => fl(50), 'MPP_POWER' => [fl(900), fl(900), fl(0)]],
     'PM1OBJ1' => ['FREQ' => fl(50.01), 'U_AC' => [fl(230), fl(231), fl(229)]],
     'PWR_UNIT' => ['POWER_L1' => fl(300), 'POWER_L2' => fl(300), 'POWER_L3' => fl(300)],
@@ -53,9 +54,17 @@ foreach ($req as $sec => $keys) {
 // Zwangsladung: der Zustand des Speichers folgt (8 = manuelle Sicherheitsladung, 14 = normal)
 if (($req['ENERGY']['SAFE_CHARGE_FORCE'] ?? '') === 'u8_01') {
     $written['ENERGY']['STAT_STATE'] = 'u8_08';
+    $written['ENERGY']['SAFE_CHARGE_RUNNING'] = 'u8_01';
 }
 if (($req['ENERGY']['SAFE_CHARGE_PROHIBIT'] ?? '') === 'u8_01') {
     $written['ENERGY']['STAT_STATE'] = 'u8_0E';
+    $written['ENERGY']['SAFE_CHARGE_RUNNING'] = 'u8_00';
+}
+if (($req['ENERGY']['LI_STORAGE_MODE_START'] ?? '') === 'u8_01') {
+    $written['ENERGY']['LI_STORAGE_MODE_RUNNING'] = 'u8_01';
+}
+if (($req['ENERGY']['LI_STORAGE_MODE_STOP'] ?? '') === 'u8_01') {
+    $written['ENERGY']['LI_STORAGE_MODE_RUNNING'] = 'u8_00';
 }
 file_put_contents($stateFile, json_encode($written));
 foreach ($written as $sec => $keys) {
