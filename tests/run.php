@@ -269,6 +269,8 @@ foreach (['einstellungen', 'mqtt', 'loxone', 'test', 'logs'] as $tab) {
     [$o, $e] = $uiPage($tab);
     check("UI $tab: ohne PHP-Warnungen und -Fehler", [$bad($o, $e), $e], [false, '']);
     check("UI $tab: Kopf und Fuss", str_contains($o, '<!--HEADER:') && str_contains($o, '<!--FOOTER-->'), true);
+    // JavaScript im Seitenquelltext darf keine PHP-Syntax enthalten (ein Umbau hatte einmal `catch (e $x)` in die Skripte geschrieben und alle Schaltflaechen lahmgelegt)
+    check("UI $tab: JavaScript ohne PHP-Reste in den catch-Klauseln", [str_contains($o, '$ignoriert'), preg_match('/catch\s*\(\s*(function\s*\(\s*)?\w+\s+\$/', $o)], [false, 0]);
     preg_match('/<!--NAVBAR:(.*?)-->/', $o, $m);
     $nav = json_decode($m[1] ?? '[]', true) ?: [];
     check("UI $tab: Menueleiste mit 5 Eintraegen", count($nav), 5);

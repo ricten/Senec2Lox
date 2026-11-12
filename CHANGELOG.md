@@ -6,6 +6,11 @@ Versionierung nach [Semantic Versioning](https://semver.org/lang/de/) (`MAJOR.MI
 Release-Ablauf: Version in `senec2lox/plugin.cfg` und `senec2lox/bin/lib/AppVersion.php` erhöhen, hier einen Eintrag ergänzen,
 `bash build.sh` ausführen (prüft die Übereinstimmung), danach Git-Tag `vX.Y.Z` setzen.
 
+## [1.8.2] - 2026-11-12
+
+### Behoben
+- **Schaltflächen der Weboberfläche taten nichts** (Neu starten, Stoppen, Wartung, Statusanzeige blieb bei „…“): Beim Umbau für PHP 7.4 (1.8.1) waren in die JavaScript-Teile der Seite versehentlich PHP-Reste (`catch (e $ignoriert)`) geraten, dadurch lief das ganze Skript nicht. Die Skripte sind wieder wie in 1.8.0. Der Dienst selbst und die MQTT-Topics waren nicht betroffen. Neuer Test, der in allen Reitern nach solchen Resten sucht.
+
 ## [1.8.1] - 2026-11-12
 
 ### Geändert

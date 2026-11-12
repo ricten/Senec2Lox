@@ -1,10 +1,10 @@
 # Senec2Lox – LoxBerry-Plugin
 
-**Version: siehe `senec2lox/bin/lib/AppVersion.php` (muss mit `plugin.cfg` und [CHANGELOG.md](CHANGELOG.md) übereinstimmen; `build.sh` prüft das). Ziel-PHP: 8.4 (CLI + Web).**
+**Version: siehe `senec2lox/bin/lib/AppVersion.php` (muss mit `plugin.cfg` und [CHANGELOG.md](CHANGELOG.md) übereinstimmen; `build.sh` prüft das). Läuft mit PHP 7.4, 8.2, 8.3 und 8.4 (CLI + Web).**
 
 Bei jeder Änderung: Eintrag in CHANGELOG.md (Abschnitt „Unveröffentlicht“), bei Release Version erhöhen (SemVer).
 
-Projektziel: installierbares LoxBerry-Plugin (PHP 8 CLI + PHP-Weboberfläche), das SENEC-Speicherdaten
+Projektziel: installierbares LoxBerry-Plugin (PHP-CLI + PHP-Weboberfläche, PHP 7.4 bis 8.4), das SENEC-Speicherdaten
 (lala.cgi, lokale OpenAPI :4424, SENEC.Connect) an den LoxBerry-MQTT-Broker veröffentlicht.
 
 **Maßgebliche Spezifikation: [SENEC-LoxBerry-Plugin-Spezifikation.md](SENEC-LoxBerry-Plugin-Spezifikation.md).**
@@ -16,6 +16,7 @@ Bei Widerspruch gilt die Spezifikation. Stellen mit „⚠ prüfen“ nicht als 
 - `tools/` = Hilfsskripte, `build.sh` baut `senec2lox-<version>.zip`
 
 ## Harte Regeln
+- **Keine PHP-8-Syntax** (läuft ab PHP 7.4): kein `match`, keine Konstruktor-Promotion, kein `readonly`, keine Union-Typen, kein `mixed`, kein `catch` ohne Variable, kein `?->`; Rückfälle für `str_contains` & Co. stehen in `Compat.php`. Vor Releases `php -l` und `php tests/run.php` mit PHP 7.4, 8.2, 8.3 und 8.4.
 - Keine hartkodierten `/opt/loxberry`-Pfade. PHP: `loxberry_system.php` (`LBPCONFIGDIR` …); Shell/daemon/cron: Platzhalter `REPLACELBPBINDIR` usw.
 - Dateien mit LF-Zeilenenden (Shell-Skripte!). `.gitattributes`/`.editorconfig` beachten.
 - Keine Secrets (Subscription-Key, OpenAPI-Token, MQTT-Passwort) loggen oder im Klartext in der Oberfläche anzeigen.

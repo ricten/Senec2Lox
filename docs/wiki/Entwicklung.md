@@ -28,6 +28,10 @@ docs/                        Wiki und Logo (nicht im ZIP)
 Jede Sekunde: Konfiguration bei geänderter mtime neu laden → MQTT verbinden (Backoff 2–60 s) → für jede aktive Quelle, deren Zeit abgelaufen ist, abfragen (eigener Takt und Backoff je Quelle) → Mapper baut Topics → Publisher sendet nur Änderungen (plus periodischer Komplett-Resend) → `status.json` nach `/dev/shm` → MQTT-Keepalive.
 Nur eine Instanz (`flock`), PID-Datei, Beenden per SIGTERM/SIGINT mit `online=0`.
 
+## PHP-Versionen
+
+Das Plugin läuft mit PHP 7.4, 8.2, 8.3 und 8.4 (LoxBerry 4.0 hat auf Debian 11/12 meist PHP 7.4, auf Debian 13 PHP 8.4). Deshalb im Code **keine PHP-8-Syntax**: kein `match`, keine Konstruktor-Promotion, kein `readonly`, keine Union-Typen (`A|B`), kein `mixed`, kein `catch (X)` ohne Variable, kein `?->`, keine typisierten Klassenkonstanten. Die Funktionen `str_contains`, `str_starts_with`, `str_ends_with` und `array_is_list` haben einen Rückfall in `senec2lox/bin/lib/Compat.php`. `preinstall.sh` und `preupgrade.sh` verlangen mindestens PHP 7.4 (Test: `bash tests/test_phpcheck.sh`). Vor einem Release `php -l` aller Dateien und `php tests/run.php` mit allen vier Versionen laufen lassen.
+
 ## Tests
 
 ```bash

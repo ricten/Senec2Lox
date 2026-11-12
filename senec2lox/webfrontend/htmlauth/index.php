@@ -453,7 +453,7 @@ function act(action, data, target){
     if (j.status && !j.message) { txt = j.status; }
     el.style.display = ''; el.textContent = txt;
     refresh();
-  }).catch (function(e $ignoriert){ alert('Fehler: ' + e); });
+  }).catch(function(e){ alert('Fehler: ' + e); });
 }
 function refresh(){
   fetch(AJAX + '?action=status', {credentials: 'same-origin'}).then(function(r){ return r.json(); }).then(function(j){
@@ -482,7 +482,7 @@ function refresh(){
     document.getElementById('oa-status').textContent = oa;
     ['unregistered','pending','rejected','unreachable'].forEach(function(k){ document.getElementById('oa-' + k).style.display = (oa === k) ? '' : 'none'; });
     document.getElementById('oa-forget').style.display = (j.openapi_token && oa !== 'unregistered') ? '' : 'none';
-  }).catch (function(e $ignoriert){ document.getElementById('st-service').innerHTML = '<span class="s2m-bad">Statusabfrage fehlgeschlagen (' + esc(String(e)) + ') - URL: ' + esc(AJAX) + '</span>'; });
+  }).catch(function(e){ document.getElementById('st-service').innerHTML = '<span class="s2m-bad">Statusabfrage fehlgeschlagen (' + esc(String(e)) + ') - URL: ' + esc(AJAX) + '</span>'; });
 }
 function loadLog(){
   fetch(AJAX + '?action=log', {credentials: 'same-origin'}).then(function(r){ return r.json(); }).then(function(j){
@@ -490,7 +490,7 @@ function loadLog(){
     var atEnd = pre.scrollTop + pre.clientHeight >= pre.scrollHeight - 20;
     pre.textContent = (j.lines || []).join('\n') || '(Log ist leer)';
     if (atEnd) { pre.scrollTop = pre.scrollHeight; }
-  }).catch (function(e $ignoriert){ document.getElementById('log').textContent = 'Log konnte nicht geladen werden: ' + e; });
+  }).catch(function(e){ document.getElementById('log').textContent = 'Log konnte nicht geladen werden: ' + e; });
 }
 var curTab = <?= json_encode($tab) ?>;   // der Reiter wird vom Server gewählt (Menüleiste, ?tab=...)
 setInterval(function(){ if (!document.hidden && curTab === 'logs') { loadLog(); } }, 5000);
@@ -499,8 +499,8 @@ setInterval(function(){ if (!document.hidden && curTab === 'logs') { loadLog(); 
   var secs = document.querySelectorAll('details.s2m-sec');
   secs.forEach(function(d){
     var k = 's2m-open-' + d.querySelector('summary').textContent.trim().replace(/\s+/g, ' ');
-    try { var v = localStorage.getItem(k); if (v !== null) { d.open = (v === '1'); } } catch (e $ignoriert) {}
-    d.addEventListener('toggle', function(){ try { localStorage.setItem(k, d.open ? '1' : '0'); } catch (e $ignoriert) {} });
+    try { var v = localStorage.getItem(k); if (v !== null) { d.open = (v === '1'); } } catch (e) {}
+    d.addEventListener('toggle', function(){ try { localStorage.setItem(k, d.open ? '1' : '0'); } catch (e) {} });
   });
 })();
 refresh(); if (curTab === 'logs') { loadLog(); }

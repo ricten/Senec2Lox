@@ -1,7 +1,7 @@
 # Senec2Lox – LoxBerry-Plugin
 <img src="docs/logo/senec2lox.png" alt="Senec2Lox Logo" width="128">
 
-**Version 1.8.1** · Benötigt PHP ≥ 7.4 · [Changelog](CHANGELOG.md)
+**Version 1.8.2** · Benötigt PHP ≥ 7.4 · [Changelog](CHANGELOG.md)
 
 Dokumentation: [docs/wiki/Home.md](docs/wiki/Home.md)
 
@@ -20,7 +20,7 @@ Reiter „Einstellungen“ → Bereich „Lokale OpenAPI“: „Am Speicher regi
 Registrierung erfolgt nur per Knopfdruck. Bei Deinstallation den Eintrag im Portal selbst entfernen.
 
 ## Entwicklung
-- Tests: `php tests/run.php`
+- Tests: `php tests/run.php` (mit PHP 7.4, 8.2, 8.3 und 8.4 geprüft)
 - Fake-Server: `php -S 127.0.0.1:8081 tests/fake_lala.php`, `php tests/fake_mqtt.php 18830`
 - Dienst lokal: `SENEC2LOX_DEV_DIR=<verzeichnis mit senec2lox.json> php senec2lox/bin/senec2lox.php`
 

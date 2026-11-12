@@ -5,7 +5,7 @@
 ^ Autor | Rico Tengler |
 ^ Logo | {{:plugins:senec2lox:senec2lox.png?64|Senec2Lox}} |
 ^ Status | BETA |
-^ Version | 1.8.0 |
+^ Version | 1.8.2 |
 ^ Min. LB Version | 4.0.0.0 |
 ^ Release Download | https://github.com/ricten/Senec2Lox/releases/latest/download/senec2lox.zip |
 ^ Pre-Release Download | - |
@@ -30,7 +30,7 @@ Die wichtigsten Eigenschaften:
   * **Automatische Umschaltung:** Fällt die bevorzugte Quelle aus, speist die nächste die Live-Werte. Die aktive Quelle steht in ''senec/live/quelle''.
   * **Sprechende Topics** wie ''senec/live/pv_w'' oder ''senec/live/batterie_soc''.
   * Einstellungen ohne Neustart, Autostart nach dem Booten und Watchdog.
-  * Standardmäßig nur **lesender** Zugriff auf den Speicher. Optional **Steuerung** per MQTT-Befehl aus Loxone (Zwangsladung, schaltbare Steckdosen, Wallbox), ab Werk **gesperrt**, siehe 6.3.
+  * Standardmäßig nur **lesender** Zugriff auf den Speicher. Optional **Steuerung** per MQTT-Befehl aus Loxone (Zwangsladung, Entladung freigeben, schaltbare Steckdosen, Wallbox), ab Werk **gesperrt**, siehe 6.3.
 
 ==== 1.1 Wichtige Grundvoraussetzungen ====
 
@@ -316,6 +316,8 @@ Für Anzeigen eignen sich die getrennten, immer positiven Topics besser als ''ne
 
 Geprüft sind an einem echten Speicher die **Zwangsladung** (an und wieder aus, der Zustand folgte mit Status 8 und zurück) und die **Steckdosen** (Schwellen, Zeiten und die Modi aus, automatik und dauer_ein, jeweils mit Zurücklesen; dauer_ein für je etwa 10 Sekunden, danach wieder aus und im Ausgangszustand). Beim Einschalten kann der Speicher kurz langsam antworten; eine Abfrage in dieser Zeit lief einmal in die Zeitüberschreitung. Die **Wallbox** wurde am echten Speicher mit Smart-Laden, Zwischenladen, kleinstem und höchstem Ladestrom geprüft (mit Zurücklesen, danach wieder im Ausgangszustand). Dabei zeigte sich: Den höchsten Ladestrom übernimmt der Speicher erst nach etwa 8 Sekunden, das Plugin wartet darauf bis zu 16 Sekunden, bevor es quittiert. Der **Standard-Ladestrom** (''ladestrom_standard_a'') wurde mit 15 A statt 16 A auch nach 60 Sekunden nicht übernommen; das Plugin quittiert das ehrlich mit „abgelehnt: Der Speicher hat den Wert nicht übernommen“.
 
+Auch **Entladung freigeben** (''entladung_freigeben'') wurde am echten Speicher geprüft: Bei laufender Vollladung beendet der Befehl sie, der Status ging wieder auf 15 (Normalbetrieb).
+
 Die **Sperre** (''wallbox<N>/sperre'') wurde am echten Speicher geprüft: Sie wird in etwa einer Sekunde übernommen. Beim Test setzte der Speicher nach dem Freigeben den höchsten Ladestrom (''SET_ICMAX'') von 16 A auf 0 (ohne Fahrzeug); er blieb auf 0, bis er neu gesetzt wurde (''wallbox<N>/ladestrom_max_a'', rund 8 Sekunden bis zur Übernahme). Ob das mit angeschlossenem Fahrzeug anders ist, ist nicht geprüft.
 
 **Nicht enthalten:** Reboot des Speichers sowie Notstromreserve, Peak-Shaving und SG-Ready (gibt es nur über mein-senec.de mit Konto-Anmeldung).
@@ -363,6 +365,7 @@ Zuerst: Plugin öffnen und **Status** und **Log** ansehen. Für mehr Details den
 Der vollständige Verlauf steht im [[https://github.com/ricten/Senec2Lox/blob/main/CHANGELOG.md|CHANGELOG.md]].
 
 ^ Version ^ Änderungen ^
+| 1.8.2 | Behoben: Schaltflächen der Weboberfläche (Neu starten, Stoppen, Wartung) reagierten seit 1.8.1 nicht |
 | 1.8.1 | Läuft auch mit PHP 7.4 (Debian 11/12); Installation verlangt mindestens PHP 7.4 (bisher 8.2) |
 | 1.8.0 | Befehl ''entladung_freigeben'' (wie „Entladen freigeben“ der Wartungsseite), Topics ''live/entladung_gesperrt'' und ''live/lagermodus'' |
 | 1.7.0 | Wallbox-Typ je Wallbox wählbar (automatisch, SENEC Wallbox pro S, andere); bestimmt, ob Status-Texte veröffentlicht werden |

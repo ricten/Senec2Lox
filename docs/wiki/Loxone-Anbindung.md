@@ -38,7 +38,7 @@ Hinweise:
 
 ## 3. Befehle aus Loxone (Steuerung)
 
-**Ab Werk gesperrt.** Im Reiter *Einstellungen* → *Steuerung* erst den Warnhinweis bestätigen, dann die gewünschten Gruppen freigeben (Zwangsladung, Steckdosen, Wallbox). Ohne bestätigten Warnhinweis bleibt alles gesperrt. Die Befehle ändern Einstellungen am Speicher über die lokale, nicht dokumentierte Schnittstelle `lala.cgi` (dieselbe, die der ioBroker-Adapter nutzt); SENEC unterstützt das nicht, und es gibt keinen Schutz vor widersprüchlichen Befehlen aus mehreren Quellen (Loxone, App, mein-senec.de). **Nutzung auf eigene Gefahr.**
+**Ab Werk gesperrt.** Im Reiter *Einstellungen* → *Steuerung* erst den Warnhinweis bestätigen, dann die gewünschten Gruppen freigeben (Zwangsladung mit „Entladung freigeben“, Steckdosen, Wallbox). Ohne bestätigten Warnhinweis bleibt alles gesperrt. Die Befehle ändern Einstellungen am Speicher über die lokale, nicht dokumentierte Schnittstelle `lala.cgi` (dieselbe, die der ioBroker-Adapter nutzt); SENEC unterstützt das nicht, und es gibt keinen Schutz vor widersprüchlichen Befehlen aus mehreren Quellen (Loxone, App, mein-senec.de). **Nutzung auf eigene Gefahr.**
 
 Das Plugin abonniert `senec/befehl/#` (der Präfix folgt dem Topic-Präfix). Virtueller Ausgang in Loxone: Adresse `/dev/udp/<LoxBerry-IP>/<UDP-Port>` (Standard 11884, steht im Plugin im Reiter „Einbindung in Loxone“), Befehl bei EIN `publish senec/befehl/<befehl> <wert>` (ohne HTTP-Header/Body). Die Quittung steht unter `<topic>/quittung`: zuerst `angenommen`, dann `ausgefuehrt` oder `abgelehnt: <Grund>` (nie retained). Höchstens ein Befehl alle 2 Sekunden.
 
@@ -59,6 +59,8 @@ Das Plugin abonniert `senec/befehl/#` (der Präfix folgt dem Topic-Präfix). Vir
 Für freigegebene Steckdosen und Wallbox liest das Plugin zusätzlich die Abschnitte `SOCKETS` und `WALLBOX`; ihre Einstellungen stehen (bei aktiver Option „Rohwerte veröffentlichen“) unter `senec/raw/SOCKETS/…` und `senec/raw/WALLBOX/…`.
 
 Geprüft sind an einem echten Speicher die **Zwangsladung** (an und wieder aus, der Zustand folgte mit Status 8 und zurück) und die **Steckdosen** (Schwellen, Zeiten und die Modi aus, automatik und dauer_ein, jeweils mit Zurücklesen; dauer_ein für je etwa 10 Sekunden, danach wieder aus und im Ausgangszustand). Beim Einschalten kann der Speicher kurz langsam antworten; eine Abfrage in dieser Zeit lief einmal in die Zeitüberschreitung. Die **Wallbox** wurde am echten Speicher mit Smart-Laden, Zwischenladen, kleinstem und höchstem Ladestrom geprüft (mit Zurücklesen, danach wieder im Ausgangszustand). Dabei zeigte sich: Den höchsten Ladestrom übernimmt der Speicher erst nach etwa 8 Sekunden, das Plugin wartet darauf bis zu 16 Sekunden, bevor es quittiert. Der **Standard-Ladestrom** (`ladestrom_standard_a`) wurde mit 15 A statt 16 A auch nach 60 Sekunden nicht übernommen; das Plugin quittiert das ehrlich mit „abgelehnt: Der Speicher hat den Wert nicht übernommen“.
+
+Auch **Entladung freigeben** (`entladung_freigeben`) wurde am echten Speicher geprüft: Bei laufender Vollladung beendet der Befehl sie, der Status ging wieder auf 15 (Normalbetrieb).
 
 Die **Sperre** (`wallbox<N>/sperre`) wurde am echten Speicher geprüft: Sie wird in etwa einer Sekunde übernommen. Beim Test setzte der Speicher nach dem Freigeben den höchsten Ladestrom (`SET_ICMAX`) von 16 A auf 0 (ohne Fahrzeug); er blieb auf 0, bis er neu gesetzt wurde (`wallbox<N>/ladestrom_max_a`, rund 8 Sekunden bis zur Übernahme). Ob das mit angeschlossenem Fahrzeug anders ist, ist nicht geprüft.
 
