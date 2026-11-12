@@ -319,13 +319,15 @@ $dflt = trim((string)file_get_contents($root . '/senec2lox/config/mqtt_subscript
 check('Mitgelieferte Abo-Datei: senec/# (eine Zeile, kein INI)', $dflt, 'senec/#');
 
 [$o] = $uiPage('einstellungen');
+check('UI einstellungen: Wallbox-Typ je Wallbox (vier Auswahlfelder, automatisch gewaehlt)', [str_contains($o, 'Wallboxen (Typ je Wallbox)'), substr_count($o, 'name="wb_typ'), substr_count($o, '<option value="auto" selected>automatisch erkennen</option>') >= 4, str_contains($o, 'SENEC Wallbox pro S (mit Status-Texten)')], [true, 4, true, true]);
 check('UI einstellungen: Karte Steuerung mit Warnhinweis, Bestaetigung und drei Gruppen (ab Werk alles aus)', [str_contains($o, 'Steuerung (Befehle aus Loxone)'), str_contains($o, 'Nur auf eigene Gefahr'), str_contains($o, 'name="ctl_warnung" id="ctl_warnung" value="1">'),
     str_contains($o, 'name="ctl_zwangsladung" id="ctl_zwangsladung" value="1">'), str_contains($o, 'name="ctl_steckdosen" id="ctl_steckdosen" value="1">'), str_contains($o, 'name="ctl_wallbox" id="ctl_wallbox" value="1">'), str_contains($o, 'ctl_warnung" id="ctl_warnung" value="1" checked')], [true, true, true, true, true, true, false]);
 [$o] = $uiPage('loxone');
 check('UI loxone: Befehlstabelle mit Topics, Quittung, gesperrt', [str_contains($o, 'Befehle aus Loxone (Steuerung)'), str_contains($o, 'senec/befehl/zwangsladung'), str_contains($o, 'steckdose&lt;N&gt;/einschaltschwelle_w'), str_contains($o, 'wallbox&lt;N&gt;/ladestrom_max_a'),
     str_contains($o, 'quittung'), substr_count($o, '<span class="s2m-bad">nein</span>') >= 3, str_contains($o, 'befehl/reboot')], [true, true, true, true, true, true, false]);
-file_put_contents("$uiDir/dev/senec2lox.json", json_encode(['control' => ['warnung_ok' => true, 'zwangsladung' => true, 'steckdosen' => false, 'wallbox' => true]]));
+file_put_contents("$uiDir/dev/senec2lox.json", json_encode(['wallboxen' => ['typ2' => 'pro_s', 'typ3' => 'andere'], 'control' => ['warnung_ok' => true, 'zwangsladung' => true, 'steckdosen' => false, 'wallbox' => true]]));
 [$o] = $uiPage('einstellungen');
+check('UI einstellungen: gespeicherter Wallbox-Typ steht gewaehlt', [str_contains($o, '<select class="lb-select" name="wb_typ2" id="wb_typ2"><option value="auto">automatisch erkennen</option><option value="pro_s" selected>'), str_contains($o, 'name="wb_typ3" id="wb_typ3"><option value="auto">automatisch erkennen</option><option value="pro_s">SENEC Wallbox pro S (mit Status-Texten)</option><option value="andere" selected>')], [true, true]);
 check('UI einstellungen: gespeicherte Freigaben stehen angehakt', [str_contains($o, 'name="ctl_warnung" id="ctl_warnung" value="1" checked'), str_contains($o, 'name="ctl_zwangsladung" id="ctl_zwangsladung" value="1" checked'), str_contains($o, 'name="ctl_steckdosen" id="ctl_steckdosen" value="1">'), str_contains($o, 'name="ctl_wallbox" id="ctl_wallbox" value="1" checked')], [true, true, true, true]);
 [$o] = $uiPage('loxone');
 check('UI loxone: Freigabe je Gruppe sichtbar (Zwangsladung und Wallbox ja, Steckdosen nein)', [str_contains($o, 'Zwangsladung: <span class="s2m-ok">ja</span>'), str_contains($o, 'Steckdosen: <span class="s2m-bad">nein</span>'), str_contains($o, 'Wallbox: <span class="s2m-ok">ja</span>')], [true, true, true]);
@@ -358,6 +360,11 @@ $stl = Mapper::liveFromLala(['WALLBOX' => ['STATE' => [161, 194, 0, 0], 'HW_TYPE
 check('Mapper: Status-Text je Wallbox und fuer die erste (bekannter Typ)', [$stl['wallbox2_status_text'] ?? null, $stl['wallbox_status_text'] ?? null], ['Lädt (194)', 'Nicht verbunden (161)']);
 $stf = Mapper::liveFromLala(['WALLBOX' => ['STATE' => [161, 194, 0, 0], 'HW_TYPE' => [20, 21, 20, 20]], 'WIZARD' => ['SETUP_NUMBER_WALLBOXES' => 2]]);
 check('Mapper: anderer Wallbox-Typ: nur die Zahl, kein Text (Wallbox 2); Wallbox 1 mit bekanntem Typ hat den Text', [$stf['wallbox2_status_code'] ?? null, isset($stf['wallbox2_status_text']), $stf['wallbox1_status_text'] ?? null], [194, false, 'Nicht verbunden (161)']);
+$stm = Mapper::liveFromLala(['WALLBOX' => ['STATE' => [161, 194, 0, 0], 'HW_TYPE' => [21, 20, 20, 20]], 'WIZARD' => ['SETUP_NUMBER_WALLBOXES' => 2]], ['typ1' => 'pro_s', 'typ2' => 'andere']);
+check('Mapper: manuelle Auswahl "pro_s" gibt den Text auch bei anderem/fehlendem Typ, "andere" unterdrueckt ihn', [$stm['wallbox1_status_text'] ?? null, isset($stm['wallbox2_status_text']), $stm['wallbox_status_text'] ?? null], ['Nicht verbunden (161)', false, 'Nicht verbunden (161)']);
+$stn = Mapper::liveFromLala(['WALLBOX' => ['STATE' => [161, 0, 0, 0]], 'WIZARD' => ['SETUP_NUMBER_WALLBOXES' => 1]], ['typ1' => 'pro_s']);
+check('Mapper: "pro_s" auch ganz ohne Typ-Angabe vom Speicher', $stn['wallbox1_status_text'] ?? null, 'Nicht verbunden (161)');
+check('WallboxTexts::textFuer: auto, pro_s, andere, Unsinn wie auto', [WallboxTexts::textFuer('auto', 20), WallboxTexts::textFuer('auto', 21), WallboxTexts::textFuer('pro_s', null), WallboxTexts::textFuer('andere', 20), WallboxTexts::textFuer('quatsch', 20)], [true, false, true, false, true]);
 $stk = Mapper::liveFromLala(['WALLBOX' => ['STATE' => [161, 0, 0, 0]], 'WIZARD' => ['SETUP_NUMBER_WALLBOXES' => 1]]);
 check('Mapper: ohne Typ-Angabe kein Text (nur die Zahl)', [$stk['wallbox1_status_code'] ?? null, isset($stk['wallbox1_status_text']), isset($stk['wallbox_status_text'])], [161, false, false]);
 check('Mapper: gesperrt je Wallbox', [Mapper::liveFromLala(['WALLBOX' => ['PROHIBIT_USAGE' => [1, 0, 0, 0]]])['wallbox1_gesperrt'] ?? null, Mapper::liveFromLala(['WALLBOX' => ['PROHIBIT_USAGE' => [1, 0, 0, 0]]])['wallbox2_gesperrt'] ?? null], [1, 0]);
@@ -396,6 +403,8 @@ check('Control: Wallbox ungueltige Werte (unter 6 A, ueber 32 A, kein Schalterwe
 check('Control: Zwangsladung-Bodies wie im ioBroker-Adapter', [str_contains(Control::BATTERY_ON, '"SAFE_CHARGE_FORCE":"u8_01","SAFE_CHARGE_PROHIBIT":""'), str_contains(Control::BATTERY_OFF, '"SAFE_CHARGE_FORCE":"","SAFE_CHARGE_PROHIBIT":"u8_01"'),
     json_decode(Control::BATTERY_ON) !== null, json_decode(Control::BATTERY_OFF) !== null], [true, true, true, true]);
 $cfgOff = Config::load('/gibt/es/nicht.json');
+check('Config: Wallbox-Typ ab Werk automatisch, ungueltige Eintraege werden automatisch', [$cfgOff['wallboxen'], Config::validate(array_replace_recursive($cfgOff, ['wallboxen' => ['typ2' => 'unsinn', 'typ3' => 'pro_s']]))['wallboxen']],
+    [['typ1' => 'auto', 'typ2' => 'auto', 'typ3' => 'auto', 'typ4' => 'auto'], ['typ1' => 'auto', 'typ2' => 'auto', 'typ3' => 'pro_s', 'typ4' => 'auto']]);
 check('Config: Steuerung ab Werk ganz gesperrt', $cfgOff['control'], ['warnung_ok' => false, 'zwangsladung' => false, 'steckdosen' => false, 'wallbox' => false]);
 $cfgGr = $cfgOff;
 $cfgGr['control'] = ['warnung_ok' => false, 'zwangsladung' => true, 'steckdosen' => true, 'wallbox' => true];

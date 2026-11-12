@@ -13,6 +13,19 @@ final class WallboxTexts
      */
     public const BEKANNTE_TYPEN = [20 => 'SENEC Wallbox pro S'];
 
+    /** Auswahl je Wallbox in den Einstellungen. */
+    public const TYPEN = ['auto' => 'automatisch erkennen', 'pro_s' => 'SENEC Wallbox pro S (mit Status-Texten)', 'andere' => 'andere Wallbox (nur Status-Zahl)'];
+
+    /** Soll fuer diese Wallbox ein Status-Text veroeffentlicht werden? auto = nur bei bekanntem HW_TYPE. */
+    public static function textFuer(string $einstellung, mixed $hwType): bool
+    {
+        return match ($einstellung) {
+            'pro_s' => true,
+            'andere' => false,
+            default => self::gilt($hwType),
+        };
+    }
+
     public static function gilt(mixed $hwType): bool
     {
         return is_numeric($hwType) && isset(self::BEKANNTE_TYPEN[(int)$hwType]);

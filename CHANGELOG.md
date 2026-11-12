@@ -6,6 +6,11 @@ Versionierung nach [Semantic Versioning](https://semver.org/lang/de/) (`MAJOR.MI
 Release-Ablauf: Version in `senec2lox/plugin.cfg` und `senec2lox/bin/lib/AppVersion.php` erhöhen, hier einen Eintrag ergänzen,
 `bash build.sh` ausführen (prüft die Übereinstimmung), danach Git-Tag `vX.Y.Z` setzen.
 
+## [1.7.0] - 2026-11-12
+
+### Neu
+- **Wallbox-Typ je Wallbox wählbar** (Reiter Einstellungen → Wallboxen, bis zu vier): *automatisch erkennen* (Standard: Status-Text nur, wenn der Speicher den Typ 20 = SENEC Wallbox pro S meldet), *SENEC Wallbox pro S* (Status-Text immer, auch wenn der Speicher den Typ nicht meldet) oder *andere Wallbox* (nur die Status-Zahl). So bekommen auch Anlagen ohne Typ-Angabe die Texte der Pro S, und für andere Modelle werden keine möglicherweise falschen Texte veröffentlicht. In der Konfigurationsdatei: `wallboxen` mit `typ1` bis `typ4`.
+
 ## [1.6.1] - 2026-11-12
 
 ### Neu

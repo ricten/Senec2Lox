@@ -1,7 +1,7 @@
 # Senec2Lox – LoxBerry-Plugin
 <img src="docs/logo/senec2lox.png" alt="Senec2Lox Logo" width="128">
 
-**Version 1.6.1** · Benötigt PHP ≥ 8.2 · [Changelog](CHANGELOG.md)
+**Version 1.7.0** · Benötigt PHP ≥ 8.2 · [Changelog](CHANGELOG.md)
 
 Dokumentation: [docs/wiki/Home.md](docs/wiki/Home.md)
 

@@ -91,6 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['do'] ?? '') === 'save') {
             'system_filter' => $p('connect_filter'), 'interval' => (int)$p('connect_interval', '300'),
             'timeout' => (int)$p('connect_timeout', '30'), 'include' => implode(',', (array)($_POST['connect_include'] ?? []))];
         $n['live_source_priority'] = $p('live_source_priority', 'lala,openapi,connect');
+        $n['wallboxen'] = ['typ1' => $p('wb_typ1', 'auto'), 'typ2' => $p('wb_typ2', 'auto'), 'typ3' => $p('wb_typ3', 'auto'), 'typ4' => $p('wb_typ4', 'auto')];
         $n['control'] = ['warnung_ok' => $b('ctl_warnung'), 'zwangsladung' => $b('ctl_zwangsladung'), 'steckdosen' => $b('ctl_steckdosen'), 'wallbox' => $b('ctl_wallbox')];
         $pass = $p('mqtt_pass');
         $n['mqtt'] = ['use_loxberry_broker' => $b('mqtt_lb'), 'host' => $p('mqtt_host'), 'port' => (int)$p('mqtt_port', '1883'),
@@ -294,6 +295,18 @@ LBWeb::lbheader("Senec2Lox", "", "", true);
   <div class="s2m-actions"><button type="button" class="lb-btn" onclick="act('test_connect', {key: document.getElementById('connect_key').value}, 'connect-result')">Verbindung testen</button></div>
   <pre id="connect-result" style="display:none"></pre>
   <p class="hint">Key: <a href="https://developer.senec.com/instructions" target="_blank" rel="noopener">developer.senec.com</a> &rarr; Produkte abonnieren &rarr; Profil &rarr; Meine Abonnements.</p>
+</div></details>
+
+<details class="lb-collapsible s2m-sec"><summary>Wallboxen (Typ je Wallbox)</summary><div class="lb-collapsible-content">
+  <p>Der Speicher unterstützt bis zu vier Wallboxen. Hier legen Sie je Wallbox fest, ob für ihren Status ein <b>Text</b> veröffentlicht wird (<code><?= h($s2mcfg['mqtt']['topic_prefix']) ?>/live/wallbox&lt;N&gt;_status_text</code>). Die Texte aus dem ioBroker-Adapter sind nur für die <b>SENEC Wallbox pro S</b> bekannt.</p>
+  <?php foreach ([1, 2, 3, 4] as $wbn) {
+      $opts = '';
+      foreach (WallboxTexts::TYPEN as $tk => $tt) {
+          $opts .= '<option value="' . h($tk) . '"' . (($s2mcfg['wallboxen']['typ' . $wbn] ?? 'auto') === $tk ? ' selected' : '') . '>' . h($tt) . '</option>';
+      }
+      echo frow('Wallbox ' . $wbn, '<select class="lb-select" name="wb_typ' . $wbn . '" id="wb_typ' . $wbn . '">' . $opts . '</select>', '', 'wb_typ' . $wbn);
+  } ?>
+  <p class="hint">„Automatisch“ veröffentlicht den Text, wenn der Speicher den Typ der Wallbox (<code>WALLBOX.HW_TYPE</code> 20 = SENEC Wallbox pro S) meldet. Bei „andere Wallbox“ und bei einer Wallbox, die der Speicher nicht kennt, gibt es nur die Status-Zahl (<code>wallbox&lt;N&gt;_status_code</code>). Wer eine andere SENEC-Wallbox hat und die Codes kennt, kann sie in einem Issue im Repository melden.</p>
 </div></details>
 
 <details class="lb-collapsible s2m-sec"><summary>Steuerung (Befehle aus Loxone)</summary><div class="lb-collapsible-content">

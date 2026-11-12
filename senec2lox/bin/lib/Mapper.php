@@ -65,7 +65,8 @@ final class Mapper
     }
 
     /** @return array<string,mixed> live-Werte aus lala-Werten [SEK][KEY] */
-    public static function liveFromLala(array $v): array
+    /** @param array<string,string> $wbTypen Auswahl je Wallbox: typ1 ... typ4 = auto | pro_s | andere */
+    public static function liveFromLala(array $v, array $wbTypen = []): array
     {
         $e = $v['ENERGY'] ?? [];
         $l = [
@@ -104,7 +105,7 @@ final class Mapper
             $first = reset($first);
             if (is_numeric($first)) {
                 $l['wallbox_status_code'] = (int)$first;
-                if (WallboxTexts::gilt(((array)($w['HW_TYPE'] ?? []))[0] ?? null)) {
+                if (WallboxTexts::textFuer((string)($wbTypen['typ1'] ?? 'auto'), ((array)($w['HW_TYPE'] ?? []))[0] ?? null)) {
                     $l['wallbox_status_text'] = WallboxTexts::text((int)$first);
                 }
             }
@@ -124,7 +125,7 @@ final class Mapper
                     $l[$name] = ((is_numeric($x) && (float)$x != 0.0) || $x === true) ? 1 : 0;
                 } elseif (is_numeric($x)) {
                     $l[$name] = $key === 'STATE' ? (int)$x : (float)$x;
-                    if ($key === 'STATE' && WallboxTexts::gilt(((array)($w['HW_TYPE'] ?? []))[$i] ?? null)) {
+                    if ($key === 'STATE' && WallboxTexts::textFuer((string)($wbTypen['typ' . ($i + 1)] ?? 'auto'), ((array)($w['HW_TYPE'] ?? []))[$i] ?? null)) {
                         $l['wallbox' . ($i + 1) . '_status_text'] = WallboxTexts::text((int)$x);
                     }
                 }
@@ -216,7 +217,7 @@ final class Mapper
                 continue;
             }
             if ($name === 'lala') {
-                $livePer[$name] = self::liveFromLala($s['data']);
+                $livePer[$name] = self::liveFromLala($s['data'], (array)($cfg['wallboxen'] ?? []));
                 if ($raw) {
                     foreach ($s['data'] as $sec => $keys) {
                         foreach ($keys as $key => $val) {

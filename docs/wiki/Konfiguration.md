@@ -77,6 +77,10 @@ Den Key erhalten Sie auf <https://developer.senec.com> (anmelden → Produkt abo
 | Rohwerte veröffentlichen | an | `raw/…`, `openapi/…`, `connect/…` |
 | Reihenfolge Live-Quellen | `lala,openapi,connect` | Erste aktuelle Quelle speist `senec/live/*` |
 
+## Wallboxen (Reiter „Einstellungen“)
+
+Je Wallbox (bis zu vier) lässt sich der Typ wählen: *automatisch erkennen* (Standard), *SENEC Wallbox pro S* oder *andere Wallbox*. Das bestimmt nur, ob für den Status ein Text veröffentlicht wird (`senec/live/wallbox<N>_status_text`). Automatisch gibt es den Text nur, wenn der Speicher `WALLBOX.HW_TYPE` 20 (SENEC Wallbox pro S) meldet; „pro S“ erzwingt ihn, „andere“ unterdrückt ihn (dann nur `…_status_code`). In der Konfigurationsdatei: `wallboxen` mit `typ1` bis `typ4` (`auto`, `pro_s`, `andere`).
+
 ## Steuerung (Reiter „Einstellungen“)
 
 Ab Werk alles gesperrt. Erst „Ich habe den Warnhinweis gelesen …“ anhaken, dann die Gruppen **Zwangsladung**, **Schaltbare Steckdosen** und **Wallbox** einzeln freigeben und speichern. Die Befehle und Werte stehen in der [Loxone-Anbindung](Loxone-Anbindung.md). Ohne bestätigten Warnhinweis bleibt alles gesperrt, auch wenn Gruppen angehakt sind. In der Konfigurationsdatei: `control` mit `warnung_ok`, `zwangsladung`, `steckdosen`, `wallbox` (je true/false).

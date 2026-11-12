@@ -18,6 +18,8 @@ final class Config
                 'topic_prefix' => 'senec', 'retain' => true, 'only_changes' => true,
                 'full_resend_minutes' => 5, 'publish_raw' => true],
             // Steuerbefehle aus Loxone (ab Werk gesperrt): erst nach Bestaetigung des Warnhinweises und je Gruppe freigeben
+            // Typ je Wallbox (bis zu vier): bestimmt, ob Status-Texte veroeffentlicht werden (auto = nur bei bekanntem Typ)
+            'wallboxen' => ['typ1' => 'auto', 'typ2' => 'auto', 'typ3' => 'auto', 'typ4' => 'auto'],
             'control' => ['warnung_ok' => false, 'zwangsladung' => false, 'steckdosen' => false, 'wallbox' => false],
             'log_level' => 'info',
         ];
@@ -160,6 +162,11 @@ final class Config
         $m['full_resend_minutes'] = self::clamp($m['full_resend_minutes'], 1, 1440);
         unset($m);
 
+        foreach (['typ1', 'typ2', 'typ3', 'typ4'] as $k) {
+            if (!isset(WallboxTexts::TYPEN[$c['wallboxen'][$k] ?? ''])) {
+                $c['wallboxen'][$k] = 'auto';
+            }
+        }
         // Ohne bestaetigten Warnhinweis ist keine Steuerung freigegeben, egal was in den Gruppen steht
         if (empty($c['control']['warnung_ok'])) {
             $c['control'] = ['warnung_ok' => false, 'zwangsladung' => false, 'steckdosen' => false, 'wallbox' => false];

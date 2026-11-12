@@ -5,7 +5,7 @@
 ^ Autor | Rico Tengler |
 ^ Logo | {{:plugins:senec2lox:senec2lox.png?64|Senec2Lox}} |
 ^ Status | BETA |
-^ Version | 1.6.1 |
+^ Version | 1.7.0 |
 ^ Min. LB Version | 4.0.0.0 |
 ^ Release Download | https://github.com/ricten/Senec2Lox/releases/latest/download/senec2lox.zip |
 ^ Pre-Release Download | - |
@@ -170,7 +170,11 @@ Der Bereich **Log** zeigt die letzten 100 Zeilen und aktualisiert sich alle 5 Se
 
 ----
 
-==== 3.9 Steuerung ====
+==== 3.9 Wallboxen ====
+
+Reiter //Einstellungen// → //Wallboxen//: Je Wallbox (bis zu vier) lässt sich der Typ wählen: //automatisch erkennen// (Standard), //SENEC Wallbox pro S// oder //andere Wallbox//. Das bestimmt nur, ob für den Status ein Text veröffentlicht wird (''senec/live/wallbox<N>_status_text''): automatisch nur, wenn der Speicher den Typ 20 (SENEC Wallbox pro S) meldet; „pro S“ erzwingt den Text, „andere“ unterdrückt ihn (dann nur ''…_status_code'').
+
+==== 3.10 Steuerung ====
 
 Reiter //Einstellungen// → //Steuerung//. **Ab Werk alles gesperrt.** Erst den Warnhinweis bestätigen, dann die Gruppen einzeln freigeben:
 
@@ -295,7 +299,7 @@ Für Anzeigen eignen sich die getrennten, immer positiven Topics besser als ''ne
 
 ==== 6.3 Befehle (Steuerung) ====
 
-**Ab Werk gesperrt** (siehe 3.9). Virtueller Ausgang: Adresse ''/dev/udp/<LoxBerry-IP>/<UDP-Port>'' (Standard 11884, steht im Plugin im Reiter „Einbindung in Loxone“), Befehl bei EIN ''publish senec/befehl/<befehl> <wert>'' (ohne HTTP-Header/Body).
+**Ab Werk gesperrt** (siehe 3.10). Virtueller Ausgang: Adresse ''/dev/udp/<LoxBerry-IP>/<UDP-Port>'' (Standard 11884, steht im Plugin im Reiter „Einbindung in Loxone“), Befehl bei EIN ''publish senec/befehl/<befehl> <wert>'' (ohne HTTP-Header/Body).
 
 ^ Befehl ^ Wert ^ Wirkung ^
 | ''senec/befehl/zwangsladung'' | 1 / 0 | Zwangsladung der Batterie an / aus; Zustand in ''senec/live/zwangsladung'' (1 bei Status 8 und 9) |
@@ -358,6 +362,7 @@ Zuerst: Plugin öffnen und **Status** und **Log** ansehen. Für mehr Details den
 Der vollständige Verlauf steht im [[https://github.com/ricten/Senec2Lox/blob/main/CHANGELOG.md|CHANGELOG.md]].
 
 ^ Version ^ Änderungen ^
+| 1.7.0 | Wallbox-Typ je Wallbox wählbar (automatisch, SENEC Wallbox pro S, andere); bestimmt, ob Status-Texte veröffentlicht werden |
 | 1.6.1 | Status-Texte der SENEC Wallbox pro S (''wallbox<N>_status_text''); Ladeströme höchstens bis zum Nennstrom der Wallbox |
 | 1.6.0 | Wallbox sperren und freigeben (''senec/befehl/wallbox<N>/sperre'', ''senec/live/wallbox<N>_gesperrt'') |
 | 1.5.0 | Steuerung per MQTT-Befehl (ab Werk gesperrt, mit Warnhinweis): Zwangsladung, schaltbare Steckdosen, Wallbox, jeweils mit Quittung; ''senec/live/zwangsladung'' |
